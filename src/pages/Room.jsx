@@ -1,5 +1,5 @@
 // src/pages/Room.jsx — 대화방 (메인). 구독 → 보이는 메시지 번역 → 렌더 결정 → 자동 낭독을 여기서 엮는다.
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { Lock, MessagesSquare, UserPlus } from 'lucide-react';
@@ -24,6 +24,9 @@ import { downloadText, exportChatMarkdown } from '../lib/exportChat';
 import { friendlyError } from '../lib/errors';
 import { track } from '../lib/usage';
 
+// 언어 공부 화면은 분석기·학습지 코드가 커서 열 때 불러온다
+const StudySheet = lazy(() => import('../components/room/StudySheet'));
+
 export default function Room() {
   const { roomId } = useParams();
   const { user, profile } = useAuth();
@@ -36,6 +39,7 @@ export default function Room() {
   const [visibleIds, setVisibleIds] = useState(() => new Set());
   const [correcting, setCorrecting] = useState(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [studyId, setStudyId] = useState(null); // id 로 들고 있어야 번역이 도착하면 공부 화면도 갱신된다
   const [toast, setToast] = useState('');
   const toastTimer = useRef(0);
 
@@ -76,6 +80,9 @@ export default function Room() {
   const onCorrect = useCallback((m) => setCorrecting(m), []);
   const closeCorrect = useCallback(() => setCorrecting(null), []);
   const closeInvite = useCallback(() => setInviteOpen(false), []);
+  const onStudy = useCallback((m) => setStudyId(m.id), []);
+  const closeStudy = useCallback(() => setStudyId(null), []);
+  const studyMsg = studyId ? messages.find((x) => x.id === studyId) : null;
 
   const pickLang = async (code) => {
     const m = correcting;
@@ -116,6 +123,7 @@ export default function Room() {
         onExport={onExport}
       />
       <MessageList
+        roomId={roomId}
         messages={messages}
         loaded={loaded}
         hasMore={hasMore}
@@ -127,6 +135,7 @@ export default function Room() {
         onCorrect={onCorrect}
         onCopy={onCopy}
         onDelete={onDelete}
+        onStudy={onStudy}
         empty={<EmptyRoom onInvite={() => setInviteOpen(true)} />}
       />
       <Composer
@@ -139,6 +148,11 @@ export default function Room() {
 
       {correcting && <LangCorrectSheet message={correcting} current={correcting.detectedLang} onPick={pickLang} onClose={closeCorrect} />}
       {inviteOpen && <InviteSheet room={room} isOwner={room.ownerUid === myUid} onClose={closeInvite} notify={notify} />}
+      {studyMsg && (
+        <Suspense fallback={null}>
+          <StudySheet message={studyMsg} view={view(studyMsg)} myLang={myLang} rate={speechRate} onClose={closeStudy} />
+        </Suspense>
+      )}
       {toast && (
         <div className="pointer-events-none fixed inset-x-0 top-20 z-[60] flex justify-center px-4">
           <div role="status" className="glass-strong animate-rise rounded-full px-4 py-2 text-sm shadow-xl">{toast}</div>

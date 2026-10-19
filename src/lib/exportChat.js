@@ -18,7 +18,7 @@ export function exportChatMarkdown({ room, messages, view, myLang }) {
     const at = toDate(m.createdAt)?.toLocaleString('ko-KR') || '';
     lines.push(`**${m.senderName}** · ${langName(v.srcLang)} · ${at}`);
     if (m.deletedAt) lines.push('> _(삭제된 메시지)_');
-    else if (m.type === 'image') lines.push(`![사진](${m.imageUrl})`);
+    else if (m.type === 'image') lines.push('> 📷 사진'); // 사진은 Firestore 에 base64 로 있어 링크가 없다
     else {
       lines.push(...quote(v.bodyText));
       if (v.showOrig) lines.push('>', `> 원문: ${m.text.replace(/\n/g, ' ')}`);

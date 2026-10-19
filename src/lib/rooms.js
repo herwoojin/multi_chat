@@ -1,9 +1,8 @@
 // src/lib/rooms.js — 방 생성 / 입장 / 메시지 쓰기
 import {
-  collection, doc, setDoc, updateDoc, writeBatch, serverTimestamp, arrayUnion,
+  collection, doc, getDoc, setDoc, updateDoc, writeBatch, serverTimestamp, arrayUnion,
 } from 'firebase/firestore';
-import { ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage, auth } from './firebase';
+import { db, auth } from './firebase';
 import { track } from './usage';
 
 const CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -96,28 +95,49 @@ export async function sendTextMessage({ roomId, uid, profile, myLanguage, text }
   track('fsWrites', 2);
 }
 
-/** 브라우저에서 이미지를 축소(최대 1600px, JPEG 0.82)해 업로드 용량을 줄인다. */
-async function compressImage(file, maxSide = 1600, quality = 0.82) {
+// ── 사진: Storage(유료) 대신 Firestore 에 base64 로 저장한다 ─────────────
+// 메시지 문서에 넣으면 200건 구독이 사진까지 매번 내려받으므로 rooms/{roomId}/images/{id} 로 분리하고,
+// 메시지에는 imageId 만 둔다. Firestore 문서 한도(1MiB) 안에 들도록 base64 를 700KB 이하로 줄인다.
+export const MAX_IMAGE_B64 = 700_000;
+
+/** 사진을 JPEG base64 로 만든다. 한도에 들 때까지 크기 → 화질 순으로 낮춘다. */
+async function encodeImage(file) {
   const bitmap = await createImageBitmap(file).catch(() => null);
-  if (!bitmap) return file;
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
-  return blob || file;
+  if (!bitmap) throw Object.assign(new Error('이 사진 형식은 열 수 없어요. JPEG·PNG 사진으로 보내 주세요.'), { code: 'image/unsupported' });
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    for (const maxSide of [1600, 1280, 1024, 800, 640]) {
+      const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+      canvas.width = Math.round(bitmap.width * scale);
+      canvas.height = Math.round(bitmap.height * scale);
+      ctx.fillStyle = '#fff'; // 투명 PNG 가 JPEG 에서 검게 나오지 않게
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      for (const quality of [0.82, 0.7, 0.58]) {
+        const url = canvas.toDataURL('image/jpeg', quality);
+        const data = url.slice(url.indexOf(',') + 1);
+        if (data.length <= MAX_IMAGE_B64) return { data, mime: 'image/jpeg', width: canvas.width, height: canvas.height };
+      }
+    }
+  } finally {
+    bitmap.close?.();
+  }
+  throw Object.assign(new Error('사진이 너무 커서 보낼 수 없어요.'), { code: 'image/too-large' });
 }
 
 export async function sendImageMessage({ roomId, uid, profile, myLanguage, file }) {
-  if (!storage) throw new Error('Storage 버킷이 설정되지 않았습니다.');
-  const blob = await compressImage(file);
-  const path = `rooms/${roomId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const r = sRef(storage, path);
-  await uploadBytes(r, blob, { contentType: 'image/jpeg' });
-  const imageUrl = await getDownloadURL(r);
-
+  const img = await encodeImage(file);
   const batch = writeBatch(db);
+  const imgRef = doc(collection(db, 'rooms', roomId, 'images'));
+  batch.set(imgRef, {
+    senderUid: uid,
+    mime: img.mime,
+    data: img.data,
+    width: img.width,
+    height: img.height,
+    createdAt: serverTimestamp(),
+  });
   const msgRef = doc(collection(db, 'rooms', roomId, 'messages'));
   batch.set(msgRef, {
     senderUid: uid,
@@ -128,13 +148,33 @@ export async function sendImageMessage({ roomId, uid, profile, myLanguage, file 
     text: '',
     translations: {},
     pronunciations: {},
-    imageUrl,
+    imageId: imgRef.id,
+    imageWidth: img.width,   // 사진을 읽기 전에도 자리를 잡아 두어 스크롤이 튀지 않게
+    imageHeight: img.height,
     createdAt: serverTimestamp(),
     deletedAt: null,
   });
   batch.update(doc(db, 'rooms', roomId), lastMessagePatch('📷 사진', profile, myLanguage));
   await batch.commit();
-  track('fsWrites', 2);
+  track('fsWrites', 3);
+}
+
+// 같은 사진을 탭 안에서 다시 읽지 않는다 (사진 1장 = 읽기 1회)
+const imageCache = new Map();
+
+/** @returns {Promise<string|null>} data URL */
+export function loadRoomImage(roomId, imageId) {
+  const key = `${roomId}/${imageId}`;
+  if (!imageCache.has(key)) {
+    const p = getDoc(doc(db, 'rooms', roomId, 'images', imageId)).then((s) => {
+      track('fsReads');
+      const d = s.data();
+      return d ? `data:${d.mime};base64,${d.data}` : null;
+    });
+    p.catch(() => imageCache.delete(key)); // 실패하면 다음에 다시 시도
+    imageCache.set(key, p);
+  }
+  return imageCache.get(key);
 }
 
 /** 작성자 소프트 삭제 (규칙: deletedAt 만 변경 가능). */

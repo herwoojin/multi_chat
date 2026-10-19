@@ -10,7 +10,6 @@ const MESSAGES = {
   'auth/network-request-failed': '네트워크에 연결할 수 없어요.',
   'permission-denied': '권한이 없어요. 방 멤버인지, firestore.rules 가 배포됐는지 확인해 주세요.',
   unavailable: '서버에 연결할 수 없어요. 잠시 뒤 다시 시도해 주세요.',
-  'storage/unauthorized': '사진 업로드 권한이 없어요. storage.rules 를 확인해 주세요.',
   // joinRoom Function 이 돌려주는 코드
   not_found: '해당 초대 코드의 방이 없어요.',
   closed: '방장이 초대를 닫아 두었어요.',

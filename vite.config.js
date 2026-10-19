@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: { firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'] },
+          manualChunks: { firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'] },
         },
       },
     },

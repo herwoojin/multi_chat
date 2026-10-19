@@ -1,7 +1,7 @@
 {
   "project": "말.통 (MAL.TONG)",
   "description": "메시지마다 언어를 실제로 감지해, 보는 사람이 설정한 언어로 번역해 보여주고 읽어주는 실시간 다국어 대화방",
-  "lastUpdated": "2026-10-18",
+  "lastUpdated": "2026-10-19",
   "architectureSummary": "React SPA(HashRouter)가 Firestore 를 onSnapshot 으로 구독한다. 화면에 보이는 메시지만 Netlify Function(/api/translate)으로 감지+번역을 한 번에 받아 Firestore 메시지 문서에 언어 키 하나만 되돌려 쓰고(번역 캐시), 같은 언어의 다음 사람은 요청 없이 읽는다. 음성은 /api/tts 프록시 + 청크 큐, 초대 입장은 Admin SDK 를 쓰는 /api/joinRoom 이 처리한다.",
   "repo": null,
   "categories": [
@@ -77,9 +77,9 @@
           "config": "firestore.rules, firestore.indexes.json (translations·pronunciations 인덱스 끔)"
         },
         {
-          "name": "Firebase Storage",
-          "purpose": "사진 전송 (브라우저에서 1600px JPEG 로 축소 후 업로드, 5MB 제한). 아직 미활성 — 새 버킷은 Blaze 요금제 필요",
-          "config": "storage.rules (방 멤버만 — firestore.get 교차 규칙), .env VITE_FIREBASE_STORAGE_BUCKET 주석 해제 시 사진 버튼 노출"
+          "name": "Firestore 사진 저장 (images 컬렉션)",
+          "purpose": "Storage(유료) 대신 사진을 base64 로 rooms/{id}/images/{imageId} 에 저장. 브라우저에서 JPEG 로 줄여 700KB 이하, 메시지는 imageId 만 들고 화면에 보일 때 1회 읽기",
+          "config": "src/lib/rooms.js, src/components/room/RoomImage.jsx, firestore.indexes.json (data 인덱스 끔)"
         },
         {
           "name": "localStorage",
@@ -105,9 +105,9 @@
           "config": "firestore.rules"
         },
         {
-          "name": "Storage 보안 규칙",
-          "purpose": "Firestore rooms/{id}.memberUids 로 멤버만 읽기·업로드. 덮어쓰기·삭제 금지, 이미지·5MB 제한",
-          "config": "storage.rules"
+          "name": "사진 보안 규칙 (Firestore images)",
+          "purpose": "방 멤버만 읽기·올리기. 필드·mime·750KB 제한, 수정·삭제 금지",
+          "config": "firestore.rules"
         }
       ]
     },
@@ -116,7 +116,7 @@
       "items": [
         {
           "name": "Google Translate (client=gtx)",
-          "purpose": "sl=auto 한 번 호출로 번역문 + 감지 언어(data[2]) + 발음(dt=rm). 비공식 엔드포인트",
+          "purpose": "sl=auto 한 번 호출로 번역문 + 감지 언어(data[2]) + 발음(dt=rm). 비공식 엔드포인트. 언어 공부 화면은 원문 음차(sourceRomanization)를 줄 단위로 받아 어절별 발음에 쓴다",
           "config": "netlify/functions/translate.js (교체 지점을 이 파일 하나로 격리)"
         },
         {
@@ -132,6 +132,36 @@
           "name": "Web Speech API — SpeechRecognition",
           "purpose": "음성 입력 · 대면 통역 받아쓰기. 미지원 브라우저에서는 마이크 버튼 숨김",
           "config": "src/lib/speech.js"
+        },
+        {
+          "name": "Google Gemini API (선택 · 사용자 본인 키)",
+          "purpose": "언어 공부 화면의 정밀 문법 분석(품사·역할·뜻·요약). 키는 사용자 브라우저 localStorage 에만 저장하고 브라우저에서 x-goog-api-key 헤더로 직접 호출 — 서버·Firestore 를 거치지 않음",
+          "config": "src/lib/studyApi.js (gemini-flash-latest → gemini-2.5-flash → gemini-2.0-flash 폴백)"
+        }
+      ]
+    },
+    {
+      "name": "학습 기능 (언어 공부)",
+      "items": [
+        {
+          "name": "규칙 기반 문법 분석기",
+          "purpose": "메시지를 어절로 쪼개 조사·역할(주어/목적어/술어…)과 문장별 구조를 붙인다. 한·일·중·영·불·스·베 전용 규칙, 그 밖의 언어는 어휘 단위. 키·네트워크 불필요 (meet4u 에서 이식·보완)",
+          "config": "src/lib/grammar.js"
+        },
+        {
+          "name": "어절별 발음·뜻",
+          "purpose": "어절+문장을 줄바꿈으로 이어 /api/translate 한 번으로 받는다. 음차는 줄 구조가 유지돼 어절과 정확히 정렬, 번역이 줄을 합치면 조각별로 재요청. 라틴 문자는 한국어 사용자에게 한글 발음 가이드",
+          "config": "src/lib/studyApi.js, src/lib/phonetics.js"
+        },
+        {
+          "name": "오늘의 공부 A4 학습지",
+          "purpose": "새 창에 인쇄용 HTML 을 쓰고 인쇄 대화상자 → PDF 로 저장",
+          "config": "src/lib/studyPrint.js"
+        },
+        {
+          "name": "언어 공부 화면",
+          "purpose": "말풍선 📖 → 원문·방에 쌓인 번역 중 골라 공부. 문장·어절 읽어주기, Gemini 정밀 분석. 열 때 lazy 로드",
+          "config": "src/components/room/StudySheet.jsx"
         }
       ]
     },
@@ -171,13 +201,13 @@
         {
           "name": "Firebase Emulator Suite",
           "version": "firebase-tools 15.19.0",
-          "purpose": "npm run dev:local — Auth·Firestore·Storage 를 demo-maltong 프로젝트로 로컬 실행 (실제 프로젝트·키 불필요, 규칙도 로컬에서 검증)",
+          "purpose": "npm run dev:local — Auth·Firestore 를 demo-maltong 프로젝트로 로컬 실행 (실제 프로젝트·키 불필요, 규칙도 로컬에서 검증)",
           "config": "firebase.json emulators, .env.emulator, scripts/dev-local.sh"
         },
         {
           "name": "OpenJDK",
           "version": "26 (Homebrew)",
-          "purpose": "Firestore·Storage 에뮬레이터 실행에 필요"
+          "purpose": "Firestore 에뮬레이터 실행에 필요"
         }
       ]
     },
@@ -205,7 +235,7 @@
         },
         {
           "name": "firebase deploy",
-          "purpose": "npm run deploy:rules — 규칙·인덱스·Storage 규칙 배포"
+          "purpose": "npm run deploy:rules — Firestore 규칙·인덱스 배포 (Storage 는 쓰지 않음)"
         }
       ]
     }

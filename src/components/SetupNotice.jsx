@@ -5,7 +5,7 @@ import Brand from './Brand';
 const STEPS = [
   { icon: Flame, title: 'Firebase 프로젝트 + 웹 앱 등록', body: '콘솔에서 웹 앱을 추가하고 SDK 설정값 6개를 복사합니다.' },
   { icon: KeyRound, title: '.env 작성', body: '.env.example 을 .env 로 복사해 VITE_FIREBASE_* 값을 채우고, joinRoom 용 FIREBASE_SERVICE_ACCOUNT 도 넣습니다.' },
-  { icon: ShieldCheck, title: '인증·DB 켜기', body: 'Authentication 에서 익명 + Google 로그인을 켜고, Firestore·Storage 를 만든 뒤 npm run deploy:rules 로 규칙·인덱스를 배포합니다.' },
+  { icon: ShieldCheck, title: '인증·DB 켜기', body: 'Authentication 에서 익명 + Google 로그인을 켜고, Firestore 를 만든 뒤 npm run deploy:rules 로 규칙·인덱스를 배포합니다. (Storage 는 쓰지 않습니다)' },
 ];
 
 export default function SetupNotice() {

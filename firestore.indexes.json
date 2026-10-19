@@ -19,6 +19,11 @@
       "collectionGroup": "messages",
       "fieldPath": "pronunciations",
       "indexes": []
+    },
+    {
+      "collectionGroup": "images",
+      "fieldPath": "data",
+      "indexes": []
     }
   ]
 }

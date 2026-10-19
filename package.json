@@ -9,7 +9,7 @@
     "dev:local": "sh scripts/dev-local.sh",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage"
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
   },
   "dependencies": {
     "firebase": "^12.4.0",

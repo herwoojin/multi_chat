@@ -13,7 +13,7 @@ export class TranslateError extends Error {
 
 /**
  * 감지 + 번역을 한 번에 받는다.
- * @returns {Promise<{translatedText: string, detectedLang: string|null, romanization: string|null}>}
+ * @returns {Promise<{translatedText: string, detectedLang: string|null, romanization: string|null, sourceRomanization: string|null}>}
  */
 export async function requestTranslate({ text, targetLang, sourceLang = 'auto', withRomanization = false }) {
   const key = `${sourceLang}|${targetLang}|${withRomanization ? 1 : 0}|${text}`;
@@ -39,6 +39,7 @@ export async function requestTranslate({ text, targetLang, sourceLang = 'auto', 
     translatedText: String(data.translatedText || ''),
     detectedLang: normalizeLang(raw) || (raw ? String(raw) : null),
     romanization: data.romanization || null,
+    sourceRomanization: data.sourceRomanization || null,
   };
   mem.set(key, out);
   return out;

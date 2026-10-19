@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ImagePlus, Mic, SendHorizontal, Square, Star } from 'lucide-react';
 import QuickPhrases from './QuickPhrases';
 import { sendImageMessage, sendTextMessage } from '../../lib/rooms';
-import { storage } from '../../lib/firebase';
 import { createRecognizer, isSpeechRecognitionSupported } from '../../lib/speech';
 import { stopAll } from '../../lib/tts';
 import { langName } from '../../lib/languages';
@@ -143,14 +142,10 @@ export default function Composer({ roomId, uid, profile, myLang, onError }) {
           placeholder="메시지 입력"
           className="input min-h-[44px] min-w-0 flex-1 resize-none !py-2.5 leading-snug scrollbar-thin"
         />
-        {storage && (
-          <>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
-            <button type="button" className="btn-icon" aria-label="사진 보내기" disabled={uploading} onClick={() => fileRef.current?.click()}>
-              {uploading ? <span className="spinner" /> : <ImagePlus size={20} />}
-            </button>
-          </>
-        )}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+        <button type="button" className="btn-icon" aria-label="사진 보내기" disabled={uploading} onClick={() => fileRef.current?.click()}>
+          {uploading ? <span className="spinner" /> : <ImagePlus size={20} />}
+        </button>
         {canMic && (
           <button
             type="button"

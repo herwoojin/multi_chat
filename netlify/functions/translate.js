@@ -36,6 +36,10 @@ export const handler = async (event) => {
     const romanization = body.withRomanization
       ? chunks.filter((c) => c && c[0] == null && typeof c[2] === 'string').map((c) => c[2]).join(' ').trim() || null
       : null;
+    // c[3] 은 "원문" 음차. 줄바꿈을 그대로 유지하므로 언어 공부 화면이 어절별 발음을 한 번에 받아 간다.
+    const sourceRomanization = body.withRomanization
+      ? chunks.filter((c) => c && c[0] == null && typeof c[3] === 'string').map((c) => c[3]).join(' ').trim() || null
+      : null;
 
     if (!translatedText) return json(502, { error: 'empty translation' });
 
@@ -43,6 +47,7 @@ export const handler = async (event) => {
       translatedText,
       detectedLang: typeof data?.[2] === 'string' ? data[2] : null,   // ★ 감지된 원문 언어
       romanization,
+      sourceRomanization,
     });
   } catch (e) {
     return json(502, { error: String(e?.message || e) });

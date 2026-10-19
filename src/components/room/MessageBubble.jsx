@@ -1,6 +1,7 @@
 import { memo, useState } from 'react';
-import { ChevronRight, Copy, Square, Trash2, Volume2 } from 'lucide-react';
+import { BookOpen, ChevronRight, Copy, Square, Trash2, Volume2 } from 'lucide-react';
 import LangBadge from './LangBadge';
+import RoomImage from './RoomImage';
 import { formatTime } from '../../lib/format';
 
 const HUES = [262, 190, 320, 150, 30, 210, 0, 280];
@@ -33,7 +34,7 @@ function Action({ label, onClick, active = false, children }) {
  * 말풍선 — ★ 번역문이 본문, 원문은 접어 둔 보조 (PRD 6.2).
  * 번역 대기 중에는 빈칸 대신 흐린 원문 + 스피너를 둔다.
  */
-function MessageBubble({ m, v, showOriginal, speaking, onSpeak, onCorrect, onCopy, onDelete }) {
+function MessageBubble({ m, v, roomId, showOriginal, speaking, onSpeak, onCorrect, onCopy, onDelete, onStudy }) {
   const [origToggle, setOrigToggle] = useState(null);
   const origOpen = origToggle ?? showOriginal;
 
@@ -50,11 +51,9 @@ function MessageBubble({ m, v, showOriginal, speaking, onSpeak, onCorrect, onCop
   let body;
   if (deleted) body = <p className="italic text-slate-500">삭제된 메시지입니다</p>;
   else if (isImage) {
-    body = (
-      <a href={m.imageUrl} target="_blank" rel="noreferrer" className="block">
-        <img src={m.imageUrl} alt="보낸 사진" loading="lazy" className="max-h-72 w-auto max-w-full rounded-2xl object-cover" />
-      </a>
-    );
+    body = m.imageId
+      ? <RoomImage roomId={roomId} imageId={m.imageId} width={m.imageWidth} height={m.imageHeight} />
+      : <p className="italic text-slate-500">사진</p>;
   } else if (v.isPending) {
     body = (
       <p className="msg-text text-slate-400/70" aria-busy="true">
@@ -107,6 +106,7 @@ function MessageBubble({ m, v, showOriginal, speaking, onSpeak, onCorrect, onCop
                   {speaking ? <Square size={14} /> : <Volume2 size={16} />}
                 </Action>
                 <Action label="복사" onClick={() => onCopy(v.bodyText)}><Copy size={15} /></Action>
+                {!v.pre.skip && <Action label="언어 공부" onClick={() => onStudy(m)}><BookOpen size={15} /></Action>}
               </>
             )}
             {mine && <Action label="삭제" onClick={() => onDelete(m)}><Trash2 size={15} /></Action>}
@@ -119,7 +119,7 @@ function MessageBubble({ m, v, showOriginal, speaking, onSpeak, onCorrect, onCop
 
 // 스냅샷마다 메시지 객체가 새로 만들어지므로 화면에 영향을 주는 값만 비교한다 (TRD 8)
 const sig = ({ m, v, speaking, showOriginal }) => [
-  m.id, m.text, m.type, m.imageUrl, Boolean(m.deletedAt), m.createdAt?.seconds, m.senderName, m.senderPhotoURL,
+  m.id, m.text, m.type, m.imageId, Boolean(m.deletedAt), m.createdAt?.seconds, m.senderName, m.senderPhotoURL,
   m.detectedLang, m.detectionConfidence, m.detectionSource,
   v.bodyText, v.isPending, v.translated, v.pronunciation, v.showOrig, v.hasFailed, v.srcLang,
   speaking, showOriginal,

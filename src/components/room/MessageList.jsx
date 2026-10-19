@@ -14,8 +14,8 @@ const hasIO = typeof IntersectionObserver !== 'undefined';
  * - 바닥에 붙어 있던 사람은 새 메시지·번역 도착으로 높이가 바뀌어도 계속 바닥에 둔다
  */
 export default function MessageList({
-  messages, loaded, hasMore, onLoadMore, view, showOriginal,
-  onVisibleChange, onSpeak, onCorrect, onCopy, onDelete, empty,
+  roomId, messages, loaded, hasMore, onLoadMore, view, showOriginal,
+  onVisibleChange, onSpeak, onCorrect, onCopy, onDelete, onStudy, empty,
 }) {
   const scrollerRef = useRef(null);
   const contentRef = useRef(null);
@@ -130,12 +130,14 @@ export default function MessageList({
                   <MessageBubble
                     m={m}
                     v={view(m)}
+                    roomId={roomId}
                     showOriginal={showOriginal}
                     speaking={speaking === m.id}
                     onSpeak={onSpeak}
                     onCorrect={onCorrect}
                     onCopy={onCopy}
                     onDelete={onDelete}
+                    onStudy={onStudy}
                   />
                 </div>
               </Fragment>
