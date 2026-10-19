@@ -1,0 +1,213 @@
+{
+  "project": "말.통 (MAL.TONG)",
+  "description": "메시지마다 언어를 실제로 감지해, 보는 사람이 설정한 언어로 번역해 보여주고 읽어주는 실시간 다국어 대화방",
+  "lastUpdated": "2026-10-18",
+  "architectureSummary": "React SPA(HashRouter)가 Firestore 를 onSnapshot 으로 구독한다. 화면에 보이는 메시지만 Netlify Function(/api/translate)으로 감지+번역을 한 번에 받아 Firestore 메시지 문서에 언어 키 하나만 되돌려 쓰고(번역 캐시), 같은 언어의 다음 사람은 요청 없이 읽는다. 음성은 /api/tts 프록시 + 청크 큐, 초대 입장은 Admin SDK 를 쓰는 /api/joinRoom 이 처리한다.",
+  "repo": null,
+  "categories": [
+    {
+      "name": "프론트엔드",
+      "items": [
+        {
+          "name": "React",
+          "version": "19.3.1",
+          "purpose": "UI. 말풍선은 React.memo + 시그니처 비교로 리렌더를 줄인다",
+          "config": "src/main.jsx (StrictMode)"
+        },
+        {
+          "name": "Vite",
+          "version": "7.3.7",
+          "purpose": "개발 서버 + 번들러. 개발 중에는 자체 미들웨어로 Netlify Functions 를 /api/* 에서 실행",
+          "config": "vite.config.js"
+        },
+        {
+          "name": "react-router-dom",
+          "version": "7.18.4",
+          "purpose": "HashRouter — 초대 링크가 어느 호스팅에서든 404 없이 열린다",
+          "config": "src/App.jsx"
+        },
+        {
+          "name": "Tailwind CSS",
+          "version": "3.4.19",
+          "purpose": "스타일. 공통 컴포넌트 클래스(.card .btn-* .bubble-* .sheet)는 index.css",
+          "config": "tailwind.config.js, postcss.config.js"
+        },
+        {
+          "name": "PostCSS + Autoprefixer",
+          "version": "8.5.30 / 10.6.1",
+          "purpose": "Tailwind 빌드 파이프라인",
+          "config": "postcss.config.js"
+        },
+        {
+          "name": "lucide-react",
+          "version": "1.59.0",
+          "purpose": "아이콘"
+        },
+        {
+          "name": "Pretendard · Outfit",
+          "version": "Pretendard 1.3.9",
+          "purpose": "본문(한글) · 디스플레이 폰트 (jsDelivr · Google Fonts)",
+          "config": "index.html"
+        }
+      ]
+    },
+    {
+      "name": "백엔드 (서버리스)",
+      "items": [
+        {
+          "name": "Netlify Functions",
+          "version": "ESM + esbuild",
+          "purpose": "translate(감지+번역 프록시), tts(음성 프록시), joinRoom(초대 입장)",
+          "config": "netlify/functions/, netlify.toml"
+        },
+        {
+          "name": "firebase-admin",
+          "version": "13.10.0",
+          "purpose": "joinRoom 에서 비멤버의 초대 코드 조회 + 멤버 추가 (클라이언트 규칙을 열지 않기 위해)",
+          "config": "netlify/functions/joinRoom.js — 자격증명: 에뮬레이터 → 키(FIREBASE_SERVICE_ACCOUNT/GOOGLE_APPLICATION_CREDENTIALS) → ADC(GCLOUD_PROJECT) 순"
+        }
+      ]
+    },
+    {
+      "name": "데이터·스토리지",
+      "items": [
+        {
+          "name": "Cloud Firestore",
+          "purpose": "users / rooms / rooms/{id}/messages. 번역은 translations.<lang> 점 표기로 키 하나씩만 쓴다",
+          "config": "firestore.rules, firestore.indexes.json (translations·pronunciations 인덱스 끔)"
+        },
+        {
+          "name": "Firebase Storage",
+          "purpose": "사진 전송 (브라우저에서 1600px JPEG 로 축소 후 업로드, 5MB 제한). 아직 미활성 — 새 버킷은 Blaze 요금제 필요",
+          "config": "storage.rules (방 멤버만 — firestore.get 교차 규칙), .env VITE_FIREBASE_STORAGE_BUCKET 주석 해제 시 사진 버튼 노출"
+        },
+        {
+          "name": "localStorage",
+          "purpose": "설정 사본, 자주 쓰는 문구, 대면 통역 상대 언어, 사용량 카운터"
+        }
+      ]
+    },
+    {
+      "name": "인증·접근제어",
+      "items": [
+        {
+          "name": "Firebase Auth — 익명",
+          "purpose": "가입 없는 게스트 입장. browserLocalPersistence 로 같은 브라우저면 같은 사람",
+          "config": "src/lib/firebase.js, src/context/AuthContext.jsx"
+        },
+        {
+          "name": "Firebase Auth — Google",
+          "purpose": "로그인 + 익명 계정 승격(linkWithPopup, 같은 UID 유지)"
+        },
+        {
+          "name": "Firestore 보안 규칙",
+          "purpose": "멤버만 읽기. 메시지는 작성자 소프트 삭제 + 누구나 번역 키만 수정 가능",
+          "config": "firestore.rules"
+        },
+        {
+          "name": "Storage 보안 규칙",
+          "purpose": "Firestore rooms/{id}.memberUids 로 멤버만 읽기·업로드. 덮어쓰기·삭제 금지, 이미지·5MB 제한",
+          "config": "storage.rules"
+        }
+      ]
+    },
+    {
+      "name": "AI·외부 API",
+      "items": [
+        {
+          "name": "Google Translate (client=gtx)",
+          "purpose": "sl=auto 한 번 호출로 번역문 + 감지 언어(data[2]) + 발음(dt=rm). 비공식 엔드포인트",
+          "config": "netlify/functions/translate.js (교체 지점을 이 파일 하나로 격리)"
+        },
+        {
+          "name": "Google Translate TTS",
+          "purpose": "음성 합성. 요청당 ~200자 한도 → 클라이언트가 180자 청크로 나눠 순차 재생",
+          "config": "netlify/functions/tts.js, src/lib/tts.js"
+        },
+        {
+          "name": "Web Speech API — speechSynthesis",
+          "purpose": "TTS 실패 시 브라우저 내장 음성 폴백"
+        },
+        {
+          "name": "Web Speech API — SpeechRecognition",
+          "purpose": "음성 입력 · 대면 통역 받아쓰기. 미지원 브라우저에서는 마이크 버튼 숨김",
+          "config": "src/lib/speech.js"
+        }
+      ]
+    },
+    {
+      "name": "CORS",
+      "items": [
+        {
+          "name": "Functions 프록시",
+          "purpose": "translate.googleapis.com 은 브라우저 직접 호출 시 CORS 로 막히므로 전부 /api/* 경유",
+          "config": "netlify.toml 리다이렉트 /api/* → /.netlify/functions/:splat"
+        }
+      ]
+    },
+    {
+      "name": "호스팅",
+      "items": [
+        {
+          "name": "Firebase 프로젝트",
+          "purpose": "multi-language-chat-52528 — 소유자 개인 계정·조직 (조직은 서비스 계정 키 생성 금지, 이 프로젝트만 예외)",
+          "config": ".env, .firebaserc, service-account.json(로컬·gitignore) / Netlify env FIREBASE_SERVICE_ACCOUNT"
+        },
+        {
+          "name": "Netlify",
+          "purpose": "정적 사이트(dist) + Functions. SPA 폴백 리다이렉트",
+          "config": "netlify.toml"
+        }
+      ]
+    },
+    {
+      "name": "개발 환경",
+      "items": [
+        {
+          "name": "Vite Functions 미들웨어",
+          "purpose": "netlify dev 없이 npm run dev 만으로 /api/translate·tts·joinRoom 실행",
+          "config": "vite.config.js netlifyFunctionsDev()"
+        },
+        {
+          "name": "Firebase Emulator Suite",
+          "version": "firebase-tools 15.19.0",
+          "purpose": "npm run dev:local — Auth·Firestore·Storage 를 demo-maltong 프로젝트로 로컬 실행 (실제 프로젝트·키 불필요, 규칙도 로컬에서 검증)",
+          "config": "firebase.json emulators, .env.emulator, scripts/dev-local.sh"
+        },
+        {
+          "name": "OpenJDK",
+          "version": "26 (Homebrew)",
+          "purpose": "Firestore·Storage 에뮬레이터 실행에 필요"
+        }
+      ]
+    },
+    {
+      "name": "운영 가시성(Observability)",
+      "items": [
+        {
+          "name": "서버 용량 신호등 (배터리)",
+          "purpose": "우측 하단 배터리. 서버리스라 헬스 엔드포인트 대신 localStorage 일/월 카운터로 무료 한도 대비 사용률 추정 (40/70/90%)",
+          "config": "src/lib/usage.js, src/components/UsageBattery.jsx"
+        },
+        {
+          "name": "fetch 카운터",
+          "purpose": "window.fetch 를 한 번만 감싸 /api/ 호출을 자동 집계 (이중 패치 가드)",
+          "config": "installFetchCounter() in src/main.jsx"
+        }
+      ]
+    },
+    {
+      "name": "배포 파이프라인",
+      "items": [
+        {
+          "name": "netlify deploy",
+          "purpose": "npm run build → dist + functions 배포"
+        },
+        {
+          "name": "firebase deploy",
+          "purpose": "npm run deploy:rules — 규칙·인덱스·Storage 규칙 배포"
+        }
+      ]
+    }
+  ]
+}
