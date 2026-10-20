@@ -5,16 +5,19 @@
 
 > ⚠️ **본인 목소리이거나 허락받은 목소리만** 쓰세요. 결과물을 공개할 때는 "AI 음성"이라고 밝혀 주세요.
 
-## 실행
+## 실행 — 세 가지 방법
 
-```bash
-npm run dub          # 또는: sh dubbing/run.sh
-```
+| 방법 | 어떻게 | 언제 |
+|---|---|---|
+| **① 바탕화면 앱** | `말통 더빙.app` 더블클릭 (또는 이 폴더의 `말통 더빙 실행.command`) | 이 Mac 에서 가장 쉽게 |
+| **② 터미널** | `npm run dub` (또는 `sh dubbing/run.sh`) | 개발할 때 |
+| **③ Colab 무료 GPU** | [**Colab 에서 열기**](https://colab.research.google.com/github/herwoojin/multi_chat/blob/main/dubbing/colab/maltong_dubbing.ipynb) → 칸 채우고 ▶ 한 번 | 긴 영상 · 이 Mac 이 없을 때 (몇 배 빠름) |
 
-→ 브라우저에서 **http://127.0.0.1:8790** 를 엽니다.
+①·② 는 브라우저에서 **http://127.0.0.1:8790** 이 자동으로 열립니다. 터미널 창을 닫으면 꺼져요.
 처음 실행하면 Python 3.11 가상환경과 패키지를 설치하고(몇 분), 첫 작업 때 더빙 모델(약 3GB)을 내려받습니다.
+필요한 것: Apple Silicon Mac, `ffmpeg`, `uv` — 없으면 실행 파일이 Homebrew 로 알아서 설치합니다.
 
-필요한 것: Apple Silicon Mac, `ffmpeg`, `uv` (`brew install ffmpeg uv`)
+**Colab** 은 열면 T4 GPU 가 자동으로 잡히고, 전용 Python 3.11 환경을 따로 만들어 설치하므로 Colab 기본 패키지와 버전이 충돌하지 않습니다(처음 3~5분, 이후 바로 시작). 유튜브가 Colab 에서의 내려받기를 막으면(봇 확인) 그 영상 파일을 올리라는 창이 뜹니다. 끝나면 전체 zip 이 자동으로 내려받아져요.
 
 ## 쓰는 법
 
@@ -47,7 +50,10 @@ npm run dub          # 또는: sh dubbing/run.sh
 cd dubbing
 .venv/bin/python -m dubber "https://youtu.be/…" --minutes 2 --langs en,ja --i-have-permission
 .venv/bin/python -m dubber "https://youtu.be/…" --voice ~/my_voice.m4a --i-have-permission
+.venv/bin/python -m dubber ~/Movies/my_video.mp4 --i-have-permission     # 내 영상·음성 파일
 ```
+
+음성 인식은 Apple Silicon 에서 MLX Whisper, 그 밖(Colab·Windows·Intel)에서는 openai-whisper 로 자동으로 바뀝니다 (`requirements-gpu.txt`).
 
 ## 문제가 생기면
 
@@ -55,6 +61,7 @@ cd dubbing
 |---|---|
 | 영상을 내려받지 못함 | 유튜브가 바뀐 것 — `uv pip install -U yt-dlp -p dubbing/.venv/bin/python` |
 | `'NoneType' object is not callable` (모델 로드) | `setuptools<81` 이 빠진 것 — `uv pip install "setuptools<81" -p dubbing/.venv/bin/python` |
+| Colab 에서 "Sign in to confirm you're not a bot" | 유튜브가 서버 내려받기를 막은 것 — 뜨는 창에서 같은 영상 파일을 올리기 |
 | 결과 목소리가 탁함 | 견본에 배경음악이 섞인 것 — 깨끗한 내 목소리 파일을 올리기 |
 | 말이 너무 빠르거나 밀림 | 고급 설정에서 "말 속도·차분함"을 높이거나, 번역이 긴 언어는 감안 |
 

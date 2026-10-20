@@ -112,15 +112,20 @@ class Job:
         o = self.opts
         canceled = self._cancel.is_set
 
-        # 1) 내려받기
-        self._stage('download', 0, '영상 정보를 확인하는 중…')
-        info = media.download(
-            o.url, self.dir,
-            max_seconds=o.max_minutes * 60 if o.max_minutes else None,
-            max_total_seconds=MAX_TOTAL_SECONDS,
-            on_progress=lambda f: self._stage('download', f, '영상 내려받는 중…'),
-            is_canceled=canceled,
-        )
+        # 1) 내려받기 (또는 내 영상 파일)
+        max_seconds = o.max_minutes * 60 if o.max_minutes else None
+        if Path(o.url).is_file():
+            self._stage('download', 0.5, '영상 파일을 준비하는 중…')
+            info = media.use_local(o.url, self.dir, max_seconds=max_seconds, max_total_seconds=MAX_TOTAL_SECONDS)
+        else:
+            self._stage('download', 0, '영상 정보를 확인하는 중…')
+            info = media.download(
+                o.url, self.dir,
+                max_seconds=max_seconds,
+                max_total_seconds=MAX_TOTAL_SECONDS,
+                on_progress=lambda f: self._stage('download', f, '영상 내려받는 중…'),
+                is_canceled=canceled,
+            )
         src, total = info['path'], info['duration']
         self._set(title=info['title'], duration=round(total, 2))
 
@@ -192,9 +197,10 @@ class Job:
             # 자막은 더빙 음성이 실제로 나오는 시각에 맞춘다
             cues = [{'start': a, 'end': max(b, a + 0.5), 'text': tr[t][i]} for i, (a, b) in enumerate(placed)]
             write_srt(d / f'subtitles_{t}.srt', cues)
-            media.mux_video(src, wav, d / f'subtitles_{t}.srt', d / f'video_{t}.mp4', iso3(t), total)
+            if media.has_video(src):  # 음성 파일만 넣었으면 영상은 건너뛴다
+                media.mux_video(src, wav, d / f'subtitles_{t}.srt', d / f'video_{t}.mp4', iso3(t), total)
+                self._add_file(t, 'video', d / f'video_{t}.mp4', f'{label(t)} 더빙 영상')
             wav.unlink(missing_ok=True)
-            self._add_file(t, 'video', d / f'video_{t}.mp4', f'{label(t)} 더빙 영상')
             self._add_file(t, 'audio', d / f'dub_{t}.mp3', f'{label(t)} 더빙 음성')
             self._add_file(t, 'srt', d / f'subtitles_{t}.srt', f'{label(t)} 자막')
             tts.free_cache()

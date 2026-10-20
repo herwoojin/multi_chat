@@ -152,10 +152,9 @@ def heard(wav, sr, lang):
     """만든 소리를 Whisper(로컬)로 다시 받아쓴다."""
     import tempfile
 
-    import mlx_whisper
     import soundfile as sf
 
-    from .stt import MODEL
+    from .stt import transcribe_text
     with tempfile.NamedTemporaryFile(suffix='.wav') as f:
         sf.write(f.name, wav, sr)
-        return mlx_whisper.transcribe(f.name, path_or_hf_repo=MODEL, language=lang, condition_on_previous_text=False, verbose=None).get('text', '')
+        return transcribe_text(f.name, lang)

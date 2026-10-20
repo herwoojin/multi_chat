@@ -2,6 +2,7 @@
 
   .venv/bin/python -m dubber "https://youtu.be/..." --i-have-permission
   .venv/bin/python -m dubber "https://youtu.be/..." --langs en,ja --minutes 2 --voice my_voice.m4a --i-have-permission
+  .venv/bin/python -m dubber ~/Movies/my_video.mp4 --i-have-permission      # 내 영상 파일
 """
 import argparse
 import threading
@@ -14,7 +15,7 @@ from .pipeline import Job, Options
 
 def main():
     ap = argparse.ArgumentParser(prog='dubber', description='유튜브 영상을 원래 목소리로 여러 언어 더빙')
-    ap.add_argument('url')
+    ap.add_argument('url', help='유튜브 링크 또는 내 영상·음성 파일 경로')
     ap.add_argument('--langs', default=','.join(DEFAULT_TARGETS), help=f'쉼표로 구분 ({", ".join(LANGS)})')
     ap.add_argument('--minutes', type=float, help='앞부분 몇 분만')
     ap.add_argument('--voice', help='목소리 견본 파일 (없으면 영상 속 목소리)')

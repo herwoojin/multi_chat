@@ -1,0 +1,10 @@
+# Apple Silicon 이 아닌 곳 — Colab(GPU)·Windows·Intel Mac. 음성 인식은 openai-whisper(PyTorch)로 한다.
+# Python 3.11 전용 가상환경에 설치한다 (Colab 기본 패키지와 섞으면 torch·torchvision 버전이 충돌한다).
+chatterbox-tts==0.1.7        # torch 2.6.0 · transformers 5.2.0 를 함께 고정한다
+setuptools<81                # 워터마크(resemble-perth)가 pkg_resources 를 쓴다
+openai-whisper==20250625
+yt-dlp>=2026.8.19
+fastapi==0.153.0             # 웹 화면(server.py)을 쓸 때만 필요
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+psutil==7.2.2

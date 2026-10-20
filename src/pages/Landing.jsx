@@ -1,7 +1,7 @@
 // src/pages/Landing.jsx — 방 만들기 / 초대코드로 들어가기 / 내 대화방
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, LogIn, Mic, Plus, Settings as SettingsIcon, Users } from 'lucide-react';
+import { ChevronRight, Clapperboard, ExternalLink, LogIn, Mic, Plus, Settings as SettingsIcon, Users } from 'lucide-react';
 import Brand from '../components/Brand';
 import LanguageSelect from '../components/LanguageSelect';
 import SetupNotice from '../components/SetupNotice';
@@ -16,6 +16,7 @@ import { formatRelative } from '../lib/format';
 import { langFlag } from '../lib/languages';
 
 const CODE_RE = /^[A-Z0-9]{8}$/;
+const DUBBING_COLAB = 'https://colab.research.google.com/github/herwoojin/multi_chat/blob/main/dubbing/colab/maltong_dubbing.ipynb';
 
 /** 초대 링크를 통째로 붙여넣어도 코드만 뽑아낸다 */
 const extractCode = (raw) => {
@@ -165,6 +166,15 @@ function Home() {
           </button>
         )}
       </section>
+      {/* 더빙은 GPU 가 필요해 이 사이트(Netlify)에서는 돌릴 수 없다 — Colab 무료 GPU 노트북으로 보낸다 */}
+      <a href={DUBBING_COLAB} target="_blank" rel="noreferrer" className="glass mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition hover:bg-white/[0.09]">
+        <Clapperboard size={18} className="shrink-0 text-aqua-400" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold">유튜브 영상 다국어 더빙</span>
+          <span className="block text-xs text-slate-400">원래 목소리 그대로 6개 언어 — Colab 무료 GPU 에서 원클릭</span>
+        </span>
+        <ExternalLink size={14} className="shrink-0 text-slate-500" />
+      </a>
       {profile && (
         <p className="mt-4 text-center text-xs text-slate-500">
           {profile.displayName} 님으로 접속 중{user?.isAnonymous ? ' · 게스트' : ''}

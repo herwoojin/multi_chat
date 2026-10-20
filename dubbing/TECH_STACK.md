@@ -2,7 +2,7 @@
 
 > **한 줄 요약** — 유튜브 링크 하나로 원래 목소리 그대로 6개 언어 더빙 영상·음성·자막을 만드는 로컬 웹 도구. 음성 인식·목소리 합성이 전부 이 Mac 에서 돈다.
 >
-> **최종 수정: 2026-10-20** · 머신 판독용 원본은 [`techstack.json`](./techstack.json) (더빙 화면 아래 "기술 스택"에서도 보임)
+> **최종 수정: 2026-10-21** · 머신 판독용 원본은 [`techstack.json`](./techstack.json) (더빙 화면 아래 "기술 스택"에서도 보임)
 
 ---
 
@@ -35,7 +35,10 @@ flowchart LR
 | 백엔드 | Python | 3.11 | Chatterbox 가 시험된 버전 (uv `.venv`) | `run.sh` |
 | 백엔드 | FastAPI · Uvicorn | 0.153 · 0.54 | API·정적 페이지 | `server.py` |
 | AI(로컬) | Chatterbox Multilingual | 0.1.7 | 목소리 복제 다국어 합성 (MIT) | `dubber/tts.py` |
-| AI(로컬) | Whisper large-v3-turbo (MLX) | mlx-whisper 0.4.3 | 음성 인식 + 시각, 합성 결과 재확인 | `dubber/stt.py`, `dubber/tts.py` |
+| AI(로컬) | Whisper large-v3-turbo (MLX) | mlx-whisper 0.4.3 | 음성 인식 + 시각, 합성 결과 재확인 (Apple Silicon) | `dubber/stt.py`, `dubber/tts.py` |
+| AI(로컬) | Whisper turbo (openai-whisper) | 20250625 | 같은 일 — Colab GPU·Windows·Intel | `dubber/stt.py`, `requirements-gpu.txt` |
+| 실행 | 바탕화면 앱 · `.command` | — | 더블클릭 → 설치 확인 → 서버 → 브라우저 | `~/Desktop/말통 더빙.app`, `말통 더빙 실행.command` |
+| 실행 | Colab 원클릭 노트북 | — | ▶ 한 번: 설치(전용 Py3.11)·더빙·zip 내려받기, T4 자동 | `colab/maltong_dubbing.ipynb` |
 | 외부 | yt-dlp | 2026.8.19+ | 유튜브 내려받기 | `dubber/media.py` |
 | 외부 | Google 번역 gtx | — | 문장별 번역 (무료) | `dubber/translate.py` |
 | 시스템 | ffmpeg | 8.1 | 추출·정리·배속·합치기 | `dubber/media.py` |
@@ -70,7 +73,8 @@ flowchart LR
 
 - **느리다** — MacBook Air M4 16GB 실측: 30초 영상 × 2개 언어 = 12분 (영상 1분·언어 하나 ≈ 8~12분, 합성 RTF ≈ 3~8). 팬이 없어 오래 돌리면 열 때문에 느려진다. 긴 영상은 "앞부분만"으로 나누거나 CUDA GPU(Colab T4 등)가 빠르다.
 - **Chatterbox 보정 2가지** (`dubber/tts.py`) — ① 문장마다 attention hook 이 쌓여 점점 느려지는 0.1.7 버그를 떼어 냄 ② 가끔 문장 앞뒤에 붙는 알아들을 수 없는 말을 Whisper 로 다시 받아써 찾아내고 최대 3번 다시 만든다 (숫자 표기 차이는 다시 만들지 않음).
-- **Apple Silicon 전용** — mlx-whisper 때문. 다른 컴퓨터는 `faster-whisper` 로 바꿔야 한다.
+- **Colab 노트북** — 의존성(리눅스용 해석)·셀 문법·openai-whisper 경로·파일 입력은 이 Mac 에서 확인했지만, Colab 에서 처음부터 끝까지 돌려 보지는 못했다. 유튜브는 Colab 같은 서버 IP 의 내려받기를 자주 막아 영상 파일 올리기로 넘어갈 수 있다.
+- **실행 파일은 macOS 용** — Windows 는 `requirements-gpu.txt` 로 설치는 되지만 실행 파일(.bat)은 아직 없다.
 - **배경음 없음** — 더빙 영상은 원래 소리를 더빙으로 바꾼다(음악·효과음도 빠진다). 보컬 분리(demucs 등)는 아직 없다.
 - **긴 번역문** — 원문보다 길게 번역된 문장은 1.4배속으로도 못 맞추면 뒤로 밀려 입 모양·화면과 어긋날 수 있다.
 - **목소리 견본 품질** — 영상 속 배경음악이 크면 견본에 섞여 결과가 탁해진다. 그럴 땐 깨끗한 내 목소리 파일을 올린다.

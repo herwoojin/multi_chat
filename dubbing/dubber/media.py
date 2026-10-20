@@ -69,6 +69,33 @@ def download(url, job_dir, max_seconds=None, max_total_seconds=None, on_progress
     }
 
 
+def has_video(path):
+    out = subprocess.run(
+        ['ffprobe', '-v', 'error', '-select_streams', 'v', '-show_entries', 'stream=codec_type', '-of', 'csv=p=0', str(path)],
+        capture_output=True, text=True,
+    ).stdout
+    return 'video' in out
+
+
+def use_local(path, job_dir, max_seconds=None, max_total_seconds=None):
+    """유튜브 대신 내 영상(또는 음성) 파일 — 유튜브가 Colab 같은 서버의 내려받기를 막을 때 쓴다."""
+    src = Path(path)
+    duration = probe_duration(src)
+    if not max_seconds and max_total_seconds and duration > max_total_seconds:
+        raise ValueError(f'파일이 {duration / 60:.0f}분이라 너무 길어요. 앞부분만 옵션으로 잘라 주세요.')
+    cut = ['-t', f'{max_seconds:.3f}'] if max_seconds and duration > max_seconds else []
+    if not has_video(src):
+        dst = Path(job_dir) / 'source.m4a'
+        run_ffmpeg('-i', src, *cut, '-vn', '-c:a', 'aac', '-b:a', '160k', dst)
+    else:
+        dst = Path(job_dir) / 'source.mp4'
+        try:  # 영상은 그대로 두고 소리만 AAC 로
+            run_ffmpeg('-i', src, *cut, '-c:v', 'copy', '-c:a', 'aac', '-movflags', '+faststart', dst)
+        except subprocess.CalledProcessError:  # mp4 에 못 담는 영상 코덱이면 다시 인코딩
+            run_ffmpeg('-i', src, *cut, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-c:a', 'aac', dst)
+    return {'path': dst, 'title': src.stem, 'uploader': '', 'url': src.name, 'duration': probe_duration(dst)}
+
+
 def extract_audio(src, dst, sample_rate, start=None, length=None):
     """모노 wav 로 뽑는다. start/length 를 주면 그 구간만."""
     args = []

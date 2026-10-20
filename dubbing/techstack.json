@@ -1,8 +1,8 @@
 {
   "project": "말.통 더빙 (로컬 도구)",
   "description": "유튜브 영상을 원래 목소리 그대로 여러 언어로 더빙해 영상·음성·자막으로 내려받게 하는 로컬 웹 도구",
-  "lastUpdated": "2026-10-20",
-  "architectureSummary": "로컬 FastAPI 서버(127.0.0.1:8790)가 작업을 한 줄로 세워 처리한다: yt-dlp 로 영상을 받고 → MLX Whisper 로 시간·문장을 인식하고 → Google 번역(gtx)으로 문장마다 번역하고 → 영상 속(또는 올린) 목소리 10~20초를 견본으로 Chatterbox Multilingual 이 같은 목소리로 합성하고 → 원래 시간표에 맞춰 트랙을 만든 뒤 ffmpeg 로 더빙 영상·음성·자막·zip 을 만든다. 음성 인식·합성은 전부 이 컴퓨터(Apple Silicon)에서 돈다.",
+  "lastUpdated": "2026-10-21",
+  "architectureSummary": "로컬 FastAPI 서버(127.0.0.1:8790)가 작업을 한 줄로 세워 처리한다: yt-dlp 로 영상을 받고 → MLX Whisper 로 시간·문장을 인식하고 → Google 번역(gtx)으로 문장마다 번역하고 → 영상 속(또는 올린) 목소리 10~20초를 견본으로 Chatterbox Multilingual 이 같은 목소리로 합성하고 → 원래 시간표에 맞춰 트랙을 만든 뒤 ffmpeg 로 더빙 영상·음성·자막·zip 을 만든다. 음성 인식·합성은 전부 실행하는 컴퓨터에서 돈다 — 이 Mac(바탕화면 앱·npm run dub) 또는 Colab 무료 GPU(원클릭 노트북).",
   "repo": "https://github.com/herwoojin/multi_chat (dubbing/)",
   "categories": [
     {
@@ -58,8 +58,34 @@
           "config": "dubber/stt.py"
         },
         {
+          "name": "Whisper turbo (openai-whisper)",
+          "version": "20250625",
+          "purpose": "Apple Silicon 이 아닌 곳(Colab GPU·Windows·Intel)의 음성 인식 — MLX 판과 같은 결과 모양. DUB_STT=mlx|openai 로 강제 가능",
+          "config": "dubber/stt.py, requirements-gpu.txt"
+        },
+        {
           "name": "PerthNet 워터마크",
           "purpose": "Chatterbox 가 합성 음성에 사람 귀에 안 들리는 워터마크를 넣는다 (AI 음성 식별용)"
+        }
+      ]
+    },
+    {
+      "name": "실행 방법",
+      "items": [
+        {
+          "name": "바탕화면 앱 · 실행 파일",
+          "purpose": "더블클릭 → ffmpeg·uv 없으면 Homebrew 로 설치 → 서버 켜고 브라우저 열기. 이미 켜져 있으면 브라우저만",
+          "config": "~/Desktop/말통 더빙.app (open 으로 아래 .command 실행), dubbing/말통 더빙 실행.command"
+        },
+        {
+          "name": "Colab 원클릭 노트북",
+          "purpose": "폼 칸 채우고 ▶ 한 번: 저장소 받기 → uv 로 전용 Python 3.11 환경(Colab 패키지와 분리) → 더빙 → 첫 언어 미리보기 → 전체 zip 자동 내려받기. 유튜브가 막으면 영상 파일 올리기로 자동 전환. 열면 T4 GPU 자동 선택",
+          "config": "dubbing/colab/maltong_dubbing.ipynb"
+        },
+        {
+          "name": "명령줄",
+          "purpose": "python -m dubber <유튜브 링크|영상·음성 파일> --langs … --minutes … --i-have-permission",
+          "config": "dubber/__main__.py"
         }
       ]
     },
@@ -69,7 +95,7 @@
         {
           "name": "YouTube (yt-dlp)",
           "version": "2026.8.19+",
-          "purpose": "720p 이하 mp4 내려받기, '앞부분만' 구간 내려받기",
+          "purpose": "720p 이하 mp4 내려받기, '앞부분만' 구간 내려받기 · 링크 대신 내 영상·음성 파일도 받는다(음성만이면 영상 없이 mp3·자막만)",
           "config": "dubber/media.py"
         },
         {
@@ -93,7 +119,7 @@
         },
         {
           "name": "Apple Silicon (M 시리즈)",
-          "purpose": "MLX Whisper·MPS 필요. M4 16GB 에서 시험"
+          "purpose": "이 Mac 로컬 실행은 MLX Whisper·MPS 를 쓴다(M4 16GB 에서 시험). 그 밖은 openai-whisper + CUDA/CPU"
         }
       ]
     },
