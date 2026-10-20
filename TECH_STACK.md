@@ -2,7 +2,7 @@
 
 > **한 줄 요약** — React SPA 가 Firestore 를 실시간 구독하고, 보이는 메시지만 Netlify Function 으로 **감지+번역을 한 번에** 받아 Firestore 에 언어 키 하나씩 되돌려 쓰는(번역 캐시) 서버리스 다국어 채팅.
 >
-> **최종 수정: 2026-10-19** · 머신 판독용 원본은 [`techstack.json`](./techstack.json) (앱의 설정 > 앱 정보에서도 보임)
+> **최종 수정: 2026-10-20** · 머신 판독용 원본은 [`techstack.json`](./techstack.json) (앱의 설정 > 앱 정보에서도 보임)
 
 ---
 
@@ -112,6 +112,11 @@ flowchart LR
 | Vite Functions 미들웨어 | — | `npm run dev` 만으로 `/api/*` 동작 | `vite.config.js` |
 | Firebase Emulator Suite | firebase-tools 15.19.0 | `npm run dev:local` — 실제 프로젝트 없이 Auth·Firestore 로컬 실행 | `firebase.json`, `.env.emulator`, `scripts/dev-local.sh` |
 | OpenJDK | 26 (Homebrew) | 에뮬레이터 실행 | `brew install openjdk` |
+
+### 로컬 도구
+| 이름 | 용도 | 위치 | 비고 |
+|---|---|---|---|
+| 말.통 더빙 | 유튜브 → 음성 인식 → 번역 → 원래 목소리로 다국어 더빙 → 영상·음성·자막·zip | `dubbing/` (`npm run dub`) | Chatterbox·Whisper 를 이 Mac 에서 돌리는 로컬 웹(127.0.0.1:8790). 자세한 구성은 [`dubbing/TECH_STACK.md`](./dubbing/TECH_STACK.md) |
 
 ### 운영 가시성(Observability)
 | 이름 | 용도 | 위치 | 비고 |

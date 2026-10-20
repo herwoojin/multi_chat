@@ -1,0 +1,9 @@
+# Python 3.11 · Apple Silicon (mlx-whisper 는 Apple Silicon 전용)
+chatterbox-tts==0.1.7        # torch 2.6.0 · transformers 5.2.0 를 함께 고정한다
+setuptools<81                # 워터마크(resemble-perth)가 pkg_resources 를 쓴다 — 81 부터 빠져 모델이 안 뜬다
+mlx-whisper==0.4.3
+yt-dlp>=2026.8.19            # 유튜브가 바뀌면 깨지므로 고정하지 않고 최신으로 올린다
+fastapi==0.153.0
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+psutil==7.2.2

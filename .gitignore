@@ -11,3 +11,8 @@ firebase-debug.log
 .emulator-data
 *-debug.log
 service-account*.json
+
+# 더빙 도구 (dubbing/)
+dubbing/.venv
+dubbing/jobs
+__pycache__

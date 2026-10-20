@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>말.통 더빙</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎙%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+  :root {
+    --bg: #070a16; --panel: rgba(255,255,255,.05); --panel-2: rgba(255,255,255,.08); --line: rgba(255,255,255,.1);
+    --text: #e2e8f0; --muted: #94a3b8; --dim: #64748b; --brand: #7c5cff; --brand-2: #a78bfa; --aqua: #22d3ee;
+    --ok: #43a047; --warn: #fbc02d; --danger: #f57c00; --critical: #e53935; --err: #fca5a5;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: 'Pretendard Variable', Pretendard, system-ui, sans-serif; color: var(--text); line-height: 1.55;
+    background: radial-gradient(1100px 560px at 50% -10%, rgba(124,92,255,.22), transparent 60%), linear-gradient(180deg, #070a16, #0b1022) fixed;
+    min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 120px; }
+  h1 { margin: 0; font-size: 1.7rem; letter-spacing: -.02em; }
+  h1 span { background: linear-gradient(100deg, #c4b5fd, #7c5cff 40%, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin: 6px 0 0; color: var(--muted); font-size: .92rem; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 18px; margin-top: 16px; backdrop-filter: blur(14px); }
+  .label { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  input[type=url], input[type=number], select {
+    width: 100%; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--text);
+    padding: 12px 14px; font: inherit; outline: none;
+  }
+  input:focus, select:focus { border-color: rgba(167,139,250,.7); box-shadow: 0 0 0 4px rgba(124,92,255,.18); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .field { margin-top: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; cursor: pointer; user-select: none; background: rgba(255,255,255,.04); font-size: .9rem; }
+  .chip input { display: none; }
+  .chip:has(input:checked) { border-color: rgba(167,139,250,.65); background: rgba(124,92,255,.22); }
+  .radio { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; cursor: pointer; margin-top: 8px; }
+  .radio:has(input:checked) { border-color: rgba(167,139,250,.6); background: rgba(124,92,255,.12); }
+  .radio small { display: block; color: var(--muted); }
+  .hint { color: var(--muted); font-size: .82rem; margin-top: 6px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
+  .range-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-top: 12px; }
+  input[type=range] { width: 100%; accent-color: var(--brand); }
+  .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; padding: 12px; border-radius: 14px; border: 1px solid rgba(251,191,36,.35); background: rgba(245,158,11,.08); font-size: .9rem; }
+  .consent input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--brand); flex-shrink: 0; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 16px; padding: 12px 18px; font: inherit; font-weight: 700; cursor: pointer; color: #fff; text-decoration: none; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { width: 100%; margin-top: 16px; background: linear-gradient(110deg, #7c5cff, #6243f5 45%, #06b6d4); box-shadow: 0 10px 30px -10px rgba(124,92,255,.6); }
+  .btn-ghost { background: rgba(255,255,255,.07); border: 1px solid var(--line); color: var(--text); padding: 8px 12px; font-weight: 600; font-size: .88rem; }
+  .btn-danger { background: rgba(229,57,53,.15); border: 1px solid rgba(229,57,53,.4); color: var(--err); padding: 8px 12px; font-size: .88rem; }
+  .error { margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(248,113,113,.35); background: rgba(239,68,68,.1); color: var(--err); font-size: .9rem; }
+  .bar { height: 10px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 12px; }
+  .bar > div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #7c5cff, #22d3ee); transition: width .6s; }
+  .steps { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; font-size: .76rem; }
+  .step { padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); }
+  .step.done { color: #a7f3d0; border-color: rgba(52,211,153,.35); }
+  .step.now { color: #fff; border-color: rgba(167,139,250,.7); background: rgba(124,92,255,.25); }
+  .muted { color: var(--muted); }
+  .title { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+  .langs { display: grid; gap: 12px; margin-top: 14px; }
+  .lang { border: 1px solid var(--line); border-radius: 18px; padding: 12px; background: rgba(255,255,255,.03); }
+  .lang h3 { margin: 0 0 8px; font-size: 1rem; }
+  .lang video { width: 100%; border-radius: 12px; background: #000; max-height: 320px; }
+  .dl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .zip { margin-top: 14px; width: 100%; background: linear-gradient(110deg, #f59e0b, #f43f5e); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+  .tabs button { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 99px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: .82rem; }
+  .tabs button.on { color: #fff; border-color: rgba(167,139,250,.7); background: rgba(124,92,255,.22); }
+  .tr { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  .tr td { padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+  .tr td:first-child { color: var(--aqua); font-variant-numeric: tabular-nums; white-space: nowrap; width: 1%; }
+  .tr .o { color: var(--muted); }
+  .scroll { max-height: 340px; overflow: auto; }
+  .jobs { list-style: none; margin: 0; padding: 0; }
+  .jobs li { display: flex; gap: 10px; align-items: center; padding: 10px 4px; border-top: 1px solid var(--line); cursor: pointer; }
+  .jobs li:hover { background: rgba(255,255,255,.03); }
+  .jobs .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: .72rem; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); white-space: nowrap; }
+  .badge.done { color: #a7f3d0; border-color: rgba(52,211,153,.4); }
+  .badge.error, .badge.canceled { color: var(--err); border-color: rgba(248,113,113,.4); }
+  .badge.running, .badge.queued { color: #c4b5fd; border-color: rgba(167,139,250,.5); }
+  .stack h4 { margin: 14px 0 6px; font-size: .78rem; letter-spacing: .06em; color: var(--muted); }
+  .stack li { margin: 4px 0; font-size: .86rem; }
+  .stack li b { color: var(--text); }
+  .stack li span { color: var(--muted); }
+  [hidden] { display: none !important; }
+
+  /* ── 서버 용량 신호등 (우측 하단 배터리) ── */
+  #serverBattery { position: fixed; right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 50; }
+  #serverBattery .bat { display: flex; align-items: center; gap: 2px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); background: rgba(11,16,34,.85); cursor: pointer; }
+  #serverBattery .body { width: 28px; height: 14px; border: 2px solid var(--c, var(--ok)); border-radius: 4px; padding: 1.5px; }
+  #serverBattery .fill { height: 100%; width: var(--fill, 100%); background: var(--c, var(--ok)); border-radius: 1.5px; transition: width .7s, background .4s; }
+  #serverBattery .pin { width: 3px; height: 7px; border-radius: 0 2px 2px 0; background: var(--c, var(--ok)); }
+  #serverBattery .bang { display: none; color: #cbd5e1; font-weight: 800; font-size: .8rem; margin-left: 4px; }
+  #serverBattery[data-level=offline] { --c: #6b7280; }
+  #serverBattery[data-level=offline] .bang { display: inline; }
+  #serverBattery[data-level=warn] .bat { animation: breathe 3.2s ease-in-out infinite; }
+  #serverBattery[data-level=danger] .bat { animation: blink 1.2s ease-in-out infinite; }
+  #serverBattery[data-level=critical] .bat { animation: blink .6s steps(2, start) infinite; }
+  @keyframes breathe { 50% { opacity: .55; } }
+  @keyframes blink { 50% { opacity: .25; } }
+  #serverBattery .pop { position: absolute; right: 0; bottom: 40px; width: 250px; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(11,16,34,.96); font-size: .82rem; box-shadow: 0 20px 40px rgba(0,0,0,.5); }
+  #serverBattery .pop div { display: flex; justify-content: space-between; margin: 3px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1><span>말.통 더빙</span></h1>
+  <p class="sub">유튜브 영상을 <b>원래 목소리 그대로</b> 여러 언어로 — 음성 인식·목소리 합성이 전부 이 컴퓨터에서 돌아요.</p>
+
+  <form id="form" class="card" autocomplete="off">
+    <label class="label" for="url">유튜브 링크</label>
+    <input id="url" type="url" required placeholder="https://www.youtube.com/watch?v=…" />
+
+    <div class="field">
+      <span class="label">더빙할 언어</span>
+      <div id="langs" class="chips"></div>
+      <p class="hint">원래 언어와 같은 언어는 자동으로 건너뛰어요.</p>
+    </div>
+
+    <div class="field">
+      <span class="label">목소리</span>
+      <label class="radio"><input type="radio" name="voiceMode" value="source" checked />
+        <span>영상 속 목소리<small>말소리가 이어지는 10~20초를 자동으로 골라 견본으로 써요.</small></span></label>
+      <label class="radio"><input type="radio" name="voiceMode" value="upload" />
+        <span>내 목소리 파일<small>10~30초, 조용한 곳에서 말소리만 (mp3·wav·m4a·mp4).</small></span></label>
+      <input id="voice" type="file" accept="audio/*,video/*" hidden style="margin-top:8px" />
+    </div>
+
+    <div class="field">
+      <label class="label" for="minutes">길이</label>
+      <div class="row">
+        <span>앞부분</span><input id="minutes" type="number" min="0.5" step="0.5" placeholder="전체" style="width:110px" /><span>분만</span>
+      </div>
+      <p class="hint" id="eta">이 Mac(M4) 기준 영상 1분 · 언어 하나에 약 8~12분 걸려요. 처음엔 0.5~1분으로 시험해 보세요.</p>
+    </div>
+
+    <details class="field">
+      <summary>고급 설정</summary>
+      <div class="range-row"><label for="exag">감정 세기 (클수록 생생하게)</label><output id="exagOut">0.5</output></div>
+      <input id="exag" type="range" min="0.25" max="1" step="0.05" value="0.5" />
+      <div class="range-row"><label for="cfg">말 속도·차분함 (낮추면 차분하고 느리게)</label><output id="cfgOut">0.5</output></div>
+      <input id="cfg" type="range" min="0.2" max="1" step="0.05" value="0.5" />
+      <div class="field">
+        <label class="label" for="src">원래 언어</label>
+        <select id="src"><option value="">자동 감지</option></select>
+      </div>
+    </details>
+
+    <label class="consent"><input id="consent" type="checkbox" />
+      <span>본인 목소리이거나, 목소리 주인에게 허락받았어요. 결과물을 공개할 때 "AI 음성"이라고 밝힐게요.</span></label>
+
+    <button id="submit" class="btn btn-primary" type="submit">더빙 시작</button>
+    <div id="formError" class="error" hidden></div>
+  </form>
+
+  <section id="job" class="card" hidden>
+    <div class="row" style="justify-content:space-between">
+      <div style="min-width:0;flex:1">
+        <div id="jobTitle" class="title"></div>
+        <div id="jobMeta" class="muted" style="font-size:.85rem"></div>
+      </div>
+      <button id="cancel" class="btn btn-danger" type="button">취소</button>
+      <button id="remove" class="btn btn-ghost" type="button">삭제</button>
+    </div>
+    <div class="bar"><div id="bar"></div></div>
+    <div id="steps" class="steps"></div>
+    <p id="jobMsg" class="muted" style="margin:10px 0 0;font-size:.9rem"></p>
+    <div id="jobError" class="error" hidden></div>
+    <div id="results" class="langs"></div>
+    <a id="zip" class="btn zip" hidden>전체 zip 내려받기</a>
+    <div id="transcript" hidden>
+      <div class="tabs" id="trTabs"></div>
+      <div class="scroll"><table class="tr" id="trTable"></table></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="label">최근 작업</span>
+    <ul id="jobs" class="jobs"></ul>
+    <p id="noJobs" class="muted" style="margin:0">아직 작업이 없어요.</p>
+  </section>
+
+  <details class="card stack">
+    <summary>기술 스택</summary>
+    <div id="stack"><p class="muted">불러오는 중…</p></div>
+  </details>
+</main>
+
+<div id="serverBattery" data-level="ok">
+  <div class="pop" id="batPop" hidden></div>
+  <div class="bat" id="batBtn" role="button" tabindex="0" aria-label="서버 용량">
+    <div class="body"><div class="fill"></div></div><div class="pin"></div><span class="bang">!</span>
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const STAGES = [['download', '내려받기'], ['stt', '음성 인식'], ['translate', '번역'], ['voice', '목소리 준비'], ['tts', '목소리 합성'], ['package', '묶기']];
+const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const fmtSize = (b) => (b > 1048576 ? `${(b / 1048576).toFixed(1)}MB` : `${Math.max(1, Math.round(b / 1024))}KB`);
+let LANGS = {};
+let current = null;
+let pollTimer = null;
+let trLang = null;
+let lastState = null;
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || `요청 실패 (${res.status})`);
+  return data;
+}
+
+// ── 폼 ──
+async function init() {
+  const cfg = await api('/api/config');
+  LANGS = cfg.langs;
+  $('#langs').innerHTML = Object.entries(LANGS).map(([code, l]) =>
+    `<label class="chip"><input type="checkbox" value="${code}" ${cfg.defaults.includes(code) ? 'checked' : ''}/>${l.flag} ${esc(l.name)}</label>`).join('');
+  $('#src').insertAdjacentHTML('beforeend', Object.entries(LANGS).map(([c, l]) => `<option value="${c}">${l.flag} ${esc(l.name)}</option>`).join(''));
+  for (const [r, o] of [['#exag', '#exagOut'], ['#cfg', '#cfgOut']]) $(r).addEventListener('input', () => { $(o).textContent = $(r).value; });
+  document.querySelectorAll('input[name=voiceMode]').forEach((el) => el.addEventListener('change', () => {
+    $('#voice').hidden = document.querySelector('input[name=voiceMode]:checked').value !== 'upload';
+  }));
+  await loadJobs();
+  const last = new URLSearchParams(location.hash.slice(1)).get('job');
+  if (last) openJob(last);
+  loadStack();
+}
+
+$('#form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = $('#formError');
+  err.hidden = true;
+  const targets = [...document.querySelectorAll('#langs input:checked')].map((x) => x.value);
+  const upload = document.querySelector('input[name=voiceMode]:checked').value === 'upload';
+  const fail = (m) => { err.textContent = m; err.hidden = false; };
+  if (!targets.length) return fail('더빙할 언어를 하나 이상 골라 주세요.');
+  if (upload && !$('#voice').files[0]) return fail('목소리 파일을 골라 주세요.');
+  if (!$('#consent').checked) return fail('본인 목소리이거나 허락받은 목소리일 때만 만들 수 있어요.');
+  const fd = new FormData();
+  fd.set('url', $('#url').value.trim());
+  fd.set('targets', targets.join(','));
+  fd.set('consent', 'true');
+  if ($('#minutes').value) fd.set('max_minutes', $('#minutes').value);
+  fd.set('exaggeration', $('#exag').value);
+  fd.set('cfg_weight', $('#cfg').value);
+  fd.set('source_lang', $('#src').value);
+  if (upload) fd.set('voice', $('#voice').files[0]);
+  $('#submit').disabled = true;
+  try {
+    const st = await api('/api/jobs', { method: 'POST', body: fd });
+    openJob(st.id);
+    loadJobs();
+  } catch (ex) { fail(ex.message); } finally { $('#submit').disabled = false; }
+});
+
+// ── 작업 보기 ──
+function openJob(id) {
+  current = id;
+  trLang = null;
+  history.replaceState(null, '', `#job=${id}`);
+  $('#job').hidden = false;
+  $('#results').innerHTML = '';
+  poll();
+}
+
+async function poll() {
+  clearTimeout(pollTimer);
+  if (!current) return;
+  try {
+    const st = await api(`/api/jobs/${current}`);
+    render(st);
+    if (st.status === 'queued' || st.status === 'running') pollTimer = setTimeout(poll, 1500);
+    else loadJobs();
+  } catch (e) {
+    $('#jobError').textContent = e.message; $('#jobError').hidden = false;
+    pollTimer = setTimeout(poll, 5000);
+  }
+}
+
+const fileUrl = (id, f, inline) => `/api/jobs/${id}/files/${f.path.split('/').map(encodeURIComponent).join('/')}${inline ? '?inline=1' : ''}`;
+
+function render(st) {
+  lastState = st;
+  const active = st.status === 'queued' || st.status === 'running';
+  $('#jobTitle').textContent = st.title || st.url;
+  const langs = (st.targets || []).map((t) => LANGS[t] ? `${LANGS[t].flag} ${LANGS[t].name}` : t).join(' · ');
+  $('#jobMeta').textContent = [st.duration ? `길이 ${fmtTime(st.duration)}` : '', st.sourceLang ? `원래 언어 ${LANGS[st.sourceLang]?.name || st.sourceLang}` : '', langs].filter(Boolean).join('  ·  ');
+  $('#bar').style.width = `${Math.round((st.progress || 0) * 100)}%`;
+  const idx = STAGES.findIndex(([k]) => k === st.stage);
+  $('#steps').innerHTML = STAGES.map(([k, n], i) => `<span class="step ${st.status === 'done' || (idx > i) ? 'done' : idx === i ? 'now' : ''}">${n}</span>`).join('');
+  const status = { queued: `대기 중${st.queuePosition ? ` · ${st.queuePosition}번째` : ''}`, running: `${st.stageLabel} — ${Math.round((st.progress || 0) * 100)}%`, done: '완료 ✅', error: '실패', canceled: '취소됨' }[st.status];
+  $('#jobMsg').textContent = [status, st.message].filter(Boolean).join(' · ');
+  $('#jobError').hidden = !st.error;
+  $('#jobError').textContent = st.error || '';
+  $('#cancel').hidden = !active;
+  $('#remove').hidden = active;
+
+  // 언어별 결과 — 끝난 언어부터 바로 받을 수 있다
+  const byLang = {};
+  for (const f of st.files || []) (byLang[f.lang] ||= []).push(f);
+  $('#results').innerHTML = Object.entries(byLang).map(([lang, files]) => {
+    const video = files.find((f) => f.kind === 'video');
+    return `<div class="lang"><h3>${LANGS[lang]?.flag || ''} ${esc(LANGS[lang]?.name || lang)}${lang === st.sourceLang ? ' <span class="muted">· 원문</span>' : ''}</h3>
+      ${video ? `<video controls preload="metadata" src="${fileUrl(st.id, video, true)}"></video>` : ''}
+      <div class="dl">${files.map((f) => `<a class="btn btn-ghost" href="${fileUrl(st.id, f)}">⬇ ${{ video: '영상 mp4', audio: '음성 mp3', srt: '자막 srt' }[f.kind]} <span class="muted">${fmtSize(f.size)}</span></a>`).join('')}</div></div>`;
+  }).join('');
+  $('#zip').hidden = !st.zip;
+  if (st.zip) { $('#zip').href = fileUrl(st.id, st.zip); $('#zip').textContent = `⬇ 전체 zip 내려받기 (${fmtSize(st.zip.size)})`; }
+
+  // 문장별 시간·원문·번역
+  const rows = st.preview || [];
+  $('#transcript').hidden = !rows.length;
+  if (rows.length) {
+    const ts = st.targets || [];
+    if (!trLang || !ts.includes(trLang)) trLang = ts[0];
+    $('#trTabs').innerHTML = ts.map((t) => `<button type="button" data-l="${t}" class="${t === trLang ? 'on' : ''}">${LANGS[t]?.flag || ''} ${esc(LANGS[t]?.name || t)}</button>`).join('');
+    $('#trTable').innerHTML = rows.map((r) => `<tr><td>${fmtTime(r.start)}</td><td><div>${esc(r.tr?.[trLang] || '')}</div><div class="o">${esc(r.text)}</div></td></tr>`).join('');
+  }
+}
+
+// 탭은 이미 받은 상태로 바로 다시 그린다 (서버에 다시 묻지 않는다)
+$('#trTabs').addEventListener('click', (e) => { const l = e.target.closest('button')?.dataset.l; if (l && lastState) { trLang = l; render(lastState); } });
+$('#cancel').addEventListener('click', async () => { if (confirm('이 작업을 취소할까요?')) { await api(`/api/jobs/${current}/cancel`, { method: 'POST' }).catch(() => {}); poll(); } });
+$('#remove').addEventListener('click', async () => {
+  if (!confirm('이 작업과 만든 파일을 모두 지울까요?')) return;
+  await api(`/api/jobs/${current}`, { method: 'DELETE' }).catch((e) => alert(e.message));
+  current = null; $('#job').hidden = true; history.replaceState(null, '', location.pathname); loadJobs();
+});
+
+async function loadJobs() {
+  const list = await api('/api/jobs').catch(() => []);
+  $('#noJobs').hidden = list.length > 0;
+  const name = { queued: '대기', running: '진행 중', done: '완료', error: '실패', canceled: '취소' };
+  $('#jobs').innerHTML = list.map((j) => `<li data-id="${esc(j.id)}"><span class="t">${esc(j.title || j.url)}</span>
+    <span class="muted" style="font-size:.8rem">${(j.targets || []).map((t) => LANGS[t]?.flag || t).join('')}</span>
+    <span class="badge ${j.status}">${name[j.status]}${j.status === 'running' ? ` ${Math.round(j.progress * 100)}%` : ''}</span></li>`).join('');
+}
+$('#jobs').addEventListener('click', (e) => { const id = e.target.closest('li')?.dataset.id; if (id) { openJob(id); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
+
+async function loadStack() {
+  try {
+    const t = await api('/techstack.json');
+    $('#stack').innerHTML = `<p class="muted" style="font-size:.86rem">${esc(t.architectureSummary)}</p>` + t.categories.map((c) =>
+      `<h4>${esc(c.name)}</h4><ul>${c.items.map((i) => `<li><b>${esc(i.name)}</b>${i.version ? ` <span>${esc(i.version)}</span>` : ''} — <span>${esc(i.purpose)}</span></li>`).join('')}</ul>`).join('') +
+      `<p class="muted" style="font-size:.78rem">최종 수정 ${esc(t.lastUpdated)}</p>`;
+  } catch { $('#stack').innerHTML = '<p class="muted">techstack.json 을 불러오지 못했어요.</p>'; }
+}
+
+// ── 서버 용량 신호등: 30초마다, 탭이 숨으면 멈춤, 3번 연속 실패면 offline ──
+const COLORS = { ok: '#43a047', warn: '#fbc02d', danger: '#f57c00', critical: '#e53935', offline: '#6b7280' };
+const LEVEL_NAME = { ok: '여유', warn: '주의', danger: '위험', critical: '한도 임박', offline: '연결 안 됨' };
+let fails = 0; let health = null; let healthTimer = null;
+async function checkHealth() {
+  clearTimeout(healthTimer);
+  if (document.hidden) return;
+  try {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 5000);
+    health = await (await fetch('/api/server-health', { signal: ctrl.signal })).json();
+    clearTimeout(to); fails = 0;
+  } catch { fails += 1; }
+  const level = fails >= 3 ? 'offline' : (health?.level || 'ok');
+  const bat = $('#serverBattery');
+  bat.dataset.level = level;
+  bat.style.setProperty('--c', COLORS[level]);
+  const used = Math.max(health?.memory?.percent || 0, health?.disk?.percent || 0);
+  bat.style.setProperty('--fill', `${level === 'offline' ? 100 : Math.max(4, 100 - used)}%`);
+  $('#batBtn').setAttribute('aria-label', `서버 용량 ${LEVEL_NAME[level]}`);
+  renderPop(level);
+  healthTimer = setTimeout(checkHealth, 30000);
+}
+function renderPop(level) {
+  const h = health || {};
+  const up = h.uptimeSec || 0;
+  $('#batPop').innerHTML = `<b>${LEVEL_NAME[level]}${h.reason ? ` · ${esc(h.reason)}` : ''}</b>
+    <div><span>메모리</span><span>${h.memory ? `${h.memory.percent}% (${(h.memory.usedMB / 1024).toFixed(1)}/${(h.memory.totalMB / 1024).toFixed(0)}GB)` : '-'}</span></div>
+    <div><span>디스크</span><span>${h.disk ? `${h.disk.percent}%` : '-'}</span></div>
+    <div><span>CPU 부하(1분)</span><span>${h.cpuLoad1m ?? '-'}</span></div>
+    <div><span>작업</span><span>${h.jobs ? `진행 ${h.jobs.running} · 대기 ${h.jobs.queued}` : '-'}</span></div>
+    <div><span>켜진 시간</span><span>${Math.floor(up / 3600)}시간 ${Math.floor((up % 3600) / 60)}분</span></div>
+    ${level === 'offline' ? '<button class="btn btn-ghost" id="retry" style="width:100%;margin-top:6px">다시 연결</button>' : ''}`;
+}
+$('#batBtn').addEventListener('click', () => { $('#batPop').hidden = !$('#batPop').hidden; });
+$('#batPop').addEventListener('click', (e) => { if (e.target.id === 'retry') { fails = 0; checkHealth(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkHealth(); if (current) poll(); } });
+
+init().catch((e) => { $('#formError').textContent = `서버에 연결하지 못했어요: ${e.message}`; $('#formError').hidden = false; });
+checkHealth();
+</script>
+</body>
+</html>
