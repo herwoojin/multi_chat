@@ -3,6 +3,7 @@
 chatterbox-tts==0.1.7        # torch 2.6.0 · transformers 5.2.0 를 함께 고정한다
 setuptools<81                # 워터마크(resemble-perth)가 pkg_resources 를 쓴다
 openai-whisper==20250625
+truststore==0.10.5          # 운영체제 인증서 저장소 사용 — HTTPS 검사(보안 프로그램) 네트워크에서도 내려받기
 yt-dlp>=2026.8.19
 fastapi==0.153.0             # 웹 화면(server.py)을 쓸 때만 필요
 uvicorn[standard]==0.54.0

@@ -2,7 +2,7 @@
   "project": "말.통 더빙 (로컬 도구)",
   "description": "유튜브 영상을 원래 목소리 그대로 여러 언어로 더빙해 영상·음성·자막으로 내려받게 하는 로컬 웹 도구",
   "lastUpdated": "2026-10-21",
-  "architectureSummary": "로컬 FastAPI 서버(127.0.0.1:8790)가 작업을 한 줄로 세워 처리한다: yt-dlp 로 영상을 받고 → MLX Whisper 로 시간·문장을 인식하고 → Google 번역(gtx)으로 문장마다 번역하고 → 영상 속(또는 올린) 목소리 10~20초를 견본으로 Chatterbox Multilingual 이 같은 목소리로 합성하고 → 원래 시간표에 맞춰 트랙을 만든 뒤 ffmpeg 로 더빙 영상·음성·자막·zip 을 만든다. 음성 인식·합성은 전부 실행하는 컴퓨터에서 돈다 — 이 Mac(바탕화면 앱·npm run dub) 또는 Colab 무료 GPU(원클릭 노트북).",
+  "architectureSummary": "로컬 FastAPI 서버(127.0.0.1:8790)가 작업을 [준비 → 자막 검토 → 만들기]로 처리한다. 준비: yt-dlp 로 영상을 받고 → Whisper large-v3 로 단어 시각까지 받아써 문장(첫 단어 시각)으로 나누고 → 용어집으로 비슷하게 들린 말을 고치고 → Google 번역(gtx) → 원래 시간보다 긴 번역은 로컬 AI(Ollama gemma4)가 같은 뜻으로 줄인다. 검토: 웹 화면에서 원문·번역·시각을 고치고 지우고 더한다. 만들기: Chatterbox Multilingual 이 원래 목소리로 바꾼 줄만 새로 합성하고, 쉼을 줄이고 최대 1.2배까지만 빠르게 해 원래 시각에 놓은 뒤 ffmpeg 로 더빙 영상·음성·자막·zip 을 만든다. 이 Mac(바탕화면 앱) 또는 Colab 무료 GPU 에서 돈다.",
   "repo": "https://github.com/herwoojin/multi_chat (dubbing/)",
   "categories": [
     {
@@ -39,6 +39,16 @@
           "name": "작업 큐 (스레드 1개)",
           "purpose": "GPU(MPS)를 오래 쓰므로 한 번에 한 작업. 진행 상황은 jobs/<id>/job.json 에 기록",
           "config": "server.py, dubber/pipeline.py"
+        },
+        {
+          "name": "자막 검토·편집 API",
+          "purpose": "GET/PUT 자막, 바뀐 원문 다시 번역, AI로 줄이기, 만들기(바꾼 줄만 합성 — clips/ 캐시)",
+          "config": "server.py, dubber/pipeline.py"
+        },
+        {
+          "name": "용어집 자모 교정",
+          "purpose": "받아쓰기에서 용어와 자모가 아주 비슷한 말만 용어 표기로 (재미나이→제미나이, 앱 시트→앱시트). 바꾼 곳은 화면에 표시",
+          "config": "dubber/glossary.py"
         }
       ]
     },
@@ -52,9 +62,9 @@
           "config": "dubber/tts.py"
         },
         {
-          "name": "Whisper large-v3-turbo (MLX)",
+          "name": "Whisper large-v3 · large-v3-turbo (MLX)",
           "version": "mlx-whisper 0.4.3",
-          "purpose": "음성 인식 — 문장별 시작·끝 시각. 무음 환각·반복 문장 걸러냄. 합성한 소리를 다시 받아써 품질 확인에도 쓴다",
+          "purpose": "받아쓰기는 large-v3(숫자·비슷한 말에 강함) + 단어 시각으로 문장을 다시 나눠 첫 단어 시각부터. 합성 결과 재확인은 빠른 turbo",
           "config": "dubber/stt.py"
         },
         {
@@ -66,6 +76,11 @@
         {
           "name": "PerthNet 워터마크",
           "purpose": "Chatterbox 가 합성 음성에 사람 귀에 안 들리는 워터마크를 넣는다 (AI 음성 식별용)"
+        },
+        {
+          "name": "Gemma 4 e2b (Ollama, 로컬)",
+          "purpose": "원래 말한 시간보다 긴 번역을 같은 뜻으로 짧게 다시 쓴다(등시성). 편집 화면의 ✂ AI로 줄이기. Ollama 가 없으면 건너뜀",
+          "config": "dubber/fit.py — DUB_LLM 으로 모델 변경"
         }
       ]
     },
@@ -167,6 +182,12 @@
         {
           "name": "AI 음성 고지",
           "purpose": "결과 README 에 AI 음성 표기·무단 배포 금지 안내"
+        },
+        {
+          "name": "truststore",
+          "version": "0.10.5",
+          "purpose": "운영체제 인증서 저장소(Mac 키체인) 사용 — 회사·보안 프로그램이 HTTPS 를 검사하는 네트워크에서도 유튜브·번역·모델 내려받기. 검증은 그대로 유지",
+          "config": "dubber/__init__.py"
         }
       ]
     },

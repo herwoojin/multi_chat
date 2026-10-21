@@ -2,6 +2,7 @@
 chatterbox-tts==0.1.7        # torch 2.6.0 · transformers 5.2.0 를 함께 고정한다
 setuptools<81                # 워터마크(resemble-perth)가 pkg_resources 를 쓴다 — 81 부터 빠져 모델이 안 뜬다
 mlx-whisper==0.4.3
+truststore==0.10.5          # 운영체제 인증서 저장소 사용 — HTTPS 검사(보안 프로그램) 네트워크에서도 내려받기
 yt-dlp>=2026.8.19            # 유튜브가 바뀌면 깨지므로 고정하지 않고 최신으로 올린다
 fastapi==0.153.0
 uvicorn[standard]==0.54.0

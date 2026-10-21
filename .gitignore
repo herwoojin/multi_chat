@@ -16,3 +16,4 @@ service-account*.json
 dubbing/.venv
 dubbing/jobs
 __pycache__
+dubbing/.rates.json

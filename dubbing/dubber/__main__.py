@@ -22,15 +22,17 @@ def main():
     ap.add_argument('--source', help='원래 언어 (없으면 자동 감지)')
     ap.add_argument('--exaggeration', type=float, default=0.5)
     ap.add_argument('--cfg', type=float, default=0.5)
+    ap.add_argument('--glossary', default='', help='자주 나오는 단어 (쉼표로) — 음성 인식·AI 번역 힌트')
     ap.add_argument('--i-have-permission', action='store_true', help='본인 또는 허락받은 목소리임을 확인')
     a = ap.parse_args()
     if not a.i_have_permission:
         ap.error('본인 목소리이거나 허락받은 목소리일 때만 쓸 수 있어요. 확인했다면 --i-have-permission 을 붙이세요.')
 
     opts = Options(url=a.url, targets=[t for t in a.langs.split(',') if t in LANGS], source_lang=a.source,
-                   max_minutes=a.minutes, voice_file=a.voice, exaggeration=a.exaggeration, cfg_weight=a.cfg)
+                   max_minutes=a.minutes, voice_file=a.voice, exaggeration=a.exaggeration, cfg_weight=a.cfg,
+                   glossary=a.glossary, review=False)  # 명령줄은 검토 없이 끝까지
     job = Job(Path(__file__).resolve().parent.parent / 'jobs', opts)
-    t = threading.Thread(target=job.run)
+    t = threading.Thread(target=job.run, args=('prepare',))
     t.start()
     last = ''
     while t.is_alive():

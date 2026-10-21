@@ -10,40 +10,24 @@
 
 ```mermaid
 flowchart LR
-  UI[web/index.html<br/>링크·언어·동의] -- POST /api/jobs --> API[FastAPI<br/>127.0.0.1:8790]
-  API --> Q[작업 큐<br/>한 번에 하나]
-  Q --> D[yt-dlp<br/>720p mp4]
-  D --> S[MLX Whisper<br/>시간·문장]
-  S --> T[Google 번역 gtx<br/>문장별]
-  S --> V[목소리 견본<br/>10~20초]
-  T --> C[Chatterbox<br/>Multilingual · MPS]
-  V --> C
-  C --> M[시간표 맞추기<br/>최대 1.4배속]
-  M --> F[ffmpeg<br/>mp4·mp3·srt·zip]
-  F -- jobs/&lt;id&gt;/ --> UI
+  UI[web/index.html] -- POST /api/jobs --> API[FastAPI<br/>127.0.0.1:8790]
+  API --> Q[작업 큐]
+  subgraph 준비
+    D[yt-dlp] --> S[Whisper large-v3<br/>단어 시각 → 문장]
+    S --> G[용어집 자모 교정]
+    G --> T[Google 번역 gtx]
+    T --> F[길이 맞추기<br/>Ollama gemma4]
+  end
+  Q --> D
+  F --> R[자막 검토·편집<br/>subtitles.json]
+  R -- 영상 만들기 --> C[Chatterbox<br/>바꾼 줄만 합성]
+  C --> M[쉼 줄이기·최대 1.2배<br/>첫 단어 시각에 배치]
+  M --> O[ffmpeg<br/>mp4·mp3·srt·zip]
 ```
 
-**시간 맞추기** — 문장 i 의 더빙을 원래 시작 시각에 놓고, 다음 문장 전까지 못 끝나면 음높이를 유지한 채 최대 1.4배 빠르게 한다. 그래도 넘치면 다음 문장을 뒤로 밀고, 쉬는 구간에서 다시 원래 시각을 따라잡는다. 번역 자막은 더빙이 실제로 나오는 시각에 맞춘다.
+**시각 맞추기** — Whisper 문장은 앞 문장이 끝난 시각에 시작하는 경우가 많아(실측: 0.00초 → 실제 말은 1.58초) 그대로 쓰면 더빙이 먼저 나온다. 단어 시각으로 첫 단어가 들리는 시각을 시작으로 삼는다. 번역이 길면 로컬 AI 가 시간에 맞게 줄이고, 합성 결과의 긴 쉼을 줄이고, 그래도 넘치면 최대 1.2배까지만 빠르게 한 뒤 다음 문장을 민다. 실측(49초 영상): 예전 중국어 10/11줄 1.4배·최대 11.8초 밀림 → 영어 최대 0.2초, 중국어는 짧은 줄 연속 구간만 밀리고 7번째 줄부터 원래 시각.
 
----
-
-## ② 카테고리별 구성
-
-| 분류 | 이름 | 버전 | 용도 | 위치 |
-|---|---|---|---|---|
-| 프론트 | 단일 HTML | — | 입력·진행률·미리보기·내려받기 | `web/index.html` |
-| 백엔드 | Python | 3.11 | Chatterbox 가 시험된 버전 (uv `.venv`) | `run.sh` |
-| 백엔드 | FastAPI · Uvicorn | 0.153 · 0.54 | API·정적 페이지 | `server.py` |
-| AI(로컬) | Chatterbox Multilingual | 0.1.7 | 목소리 복제 다국어 합성 (MIT) | `dubber/tts.py` |
-| AI(로컬) | Whisper large-v3-turbo (MLX) | mlx-whisper 0.4.3 | 음성 인식 + 시각, 합성 결과 재확인 (Apple Silicon) | `dubber/stt.py`, `dubber/tts.py` |
-| AI(로컬) | Whisper turbo (openai-whisper) | 20250625 | 같은 일 — Colab GPU·Windows·Intel | `dubber/stt.py`, `requirements-gpu.txt` |
-| 실행 | 바탕화면 앱 · `.command` | — | 더블클릭 → 설치 확인 → 서버 → 브라우저 | `~/Desktop/말통 더빙.app`, `말통 더빙 실행.command` |
-| 실행 | Colab 원클릭 노트북 | — | ▶ 한 번: 설치(전용 Py3.11)·더빙·zip 내려받기, T4 자동 | `colab/maltong_dubbing.ipynb` |
-| 외부 | yt-dlp | 2026.8.19+ | 유튜브 내려받기 | `dubber/media.py` |
-| 외부 | Google 번역 gtx | — | 문장별 번역 (무료) | `dubber/translate.py` |
-| 시스템 | ffmpeg | 8.1 | 추출·정리·배속·합치기 | `dubber/media.py` |
-| 시스템 | uv · Apple Silicon | — | 가상환경 · MLX/MPS | — |
-| 운영 가시성 | 서버 용량 신호등 | — | 메모리·디스크·CPU 배터리 | `/api/server-health`, `#serverBattery` |
+**HTTPS 검사 네트워크** — 회사·보안 프로그램(Somansa 등)이 HTTPS 를 중간에서 검사하면 Python 기본 인증서 목록(certifi)이 그 인증서를 몰라 유튜브·번역·모델 내려받기가 모두 실패한다. `truststore` 로 운영체제(Mac 키체인) 인증서 저장소를 쓰게 한다 (`dubber/__init__.py`) — 검증을 끄지 않는다.
 
 **고정 버전 주의** — `chatterbox-tts 0.1.7` 이 `torch 2.6.0`·`transformers 5.2.0` 을 고정한다. `setuptools<81` 이 없으면 워터마크(resemble-perth)가 `pkg_resources` 를 못 불러 모델이 뜨지 않는다.
 
@@ -72,10 +56,12 @@ flowchart LR
 ## ⑤ 알려진 한계
 
 - **느리다** — MacBook Air M4 16GB 실측: 30초 영상 × 2개 언어 = 12분 (영상 1분·언어 하나 ≈ 8~12분, 합성 RTF ≈ 3~8). 팬이 없어 오래 돌리면 열 때문에 느려진다. 긴 영상은 "앞부분만"으로 나누거나 CUDA GPU(Colab T4 등)가 빠르다.
-- **Chatterbox 보정 2가지** (`dubber/tts.py`) — ① 문장마다 attention hook 이 쌓여 점점 느려지는 0.1.7 버그를 떼어 냄 ② 가끔 문장 앞뒤에 붙는 알아들을 수 없는 말을 Whisper 로 다시 받아써 찾아내고 최대 3번 다시 만든다 (숫자 표기 차이는 다시 만들지 않음).
+- **Chatterbox 보정 4가지** (`dubber/tts.py`) — ① 문장마다 attention hook 이 쌓여 점점 느려지는 0.1.7 버그를 떼어 냄 ② 글자 토큰 5개 이하의 아주 짧은 문장("Is it B1?")에서 반복 검사가 빈 구간에 max() 를 해 멈추는 버그 — 문장이 끝난 상태이므로 원래처럼 끝(EOS)을 낸다 ③ 가끔 문장 앞뒤에 붙는 알아들을 수 없는 말을 Whisper 로 다시 받아써 찾아내고 최대 3번 다시 만든다 (숫자 표기 차이는 다시 만들지 않음) ④ 가끔 아주 느리게 읽는 문장(중국어 7글자에 3.8초)은 예상 길이의 1.6배를 넘으면 다시 만들고, 내용이 맞는 것 중 가장 짧은 것을 쓴다.
 - **Colab 노트북** — 의존성(리눅스용 해석)·셀 문법·openai-whisper 경로·파일 입력은 이 Mac 에서 확인했지만, Colab 에서 처음부터 끝까지 돌려 보지는 못했다. 유튜브는 Colab 같은 서버 IP 의 내려받기를 자주 막아 영상 파일 올리기로 넘어갈 수 있다.
 - **실행 파일은 macOS 용** — Windows 는 `requirements-gpu.txt` 로 설치는 되지만 실행 파일(.bat)은 아직 없다.
 - **배경음 없음** — 더빙 영상은 원래 소리를 더빙으로 바꾼다(음악·효과음도 빠진다). 보컬 분리(demucs 등)는 아직 없다.
-- **긴 번역문** — 원문보다 길게 번역된 문장은 1.4배속으로도 못 맞추면 뒤로 밀려 입 모양·화면과 어긋날 수 있다.
+- **짧은 줄이 연달아 나오는 구간** — 줄마다 숨·끝맺음 시간(약 0.6초)이 있어 짧은 대화가 빠르게 이어지면 1.2배로도 못 맞춰 몇 초 밀릴 수 있다. 편집 화면에서 줄이거나 합치면 된다.
+- **AI 로 줄인 번역** — 뜻은 대체로 지키지만 가끔 정보가 빠진다(예: "지하 1층인가?" → "Basement?"). 검토 화면에서 확인하는 것을 권한다.
+- **용어 교정은 한국어 원문만** — 다른 언어 원문은 찾아 바꾸기로 고친다.
 - **목소리 견본 품질** — 영상 속 배경음악이 크면 견본에 섞여 결과가 탁해진다. 그럴 땐 깨끗한 내 목소리 파일을 올린다.
 - **문장 단위 번역** — 문장마다 따로 번역해 앞뒤 맥락을 못 본다.

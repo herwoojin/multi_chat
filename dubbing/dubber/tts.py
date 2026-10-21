@@ -45,6 +45,23 @@ def _fix_hook_leak():
         return original(self, tfmr, buffer_idx, layer_idx, head_idx)
 
     cls._add_attention_spy = spy
+
+    # 같은 버전의 또 다른 버그: 글자 토큰이 5개 이하인 아주 짧은 문장("Is it B1?")이 다 읽힌 뒤
+    # 반복 검사가 빈 구간에 max() 를 해 IndexError 로 멈춘다. 문장이 끝난 상태이므로 원래 코드처럼 끝(EOS)을 낸다.
+    original_step = cls.step
+
+    def step(self, logits, next_token=None):
+        try:
+            return original_step(self, logits, next_token=next_token)
+        except IndexError:
+            if not getattr(self, 'complete', False):
+                raise
+            import torch
+            forced = torch.full_like(logits, -2 ** 15)
+            forced[..., self.eos_idx] = 2 ** 15
+            return forced
+
+    cls.step = step
     cls._maltong_hook_fix = True
 
 
@@ -102,26 +119,35 @@ class Voice:
             chunks.append(wav.squeeze(0).detach().cpu().numpy().astype(np.float32))
         return np.concatenate(chunks) if chunks else np.zeros(0, np.float32)
 
-    def say_checked(self, text, lang):
+    def say_checked(self, text, lang, expected=None):
         """
-        Chatterbox 는 가끔 문장 앞뒤에 알아들을 수 없는 말을 덧붙인다(무작위).
-        만든 소리를 Whisper 로 다시 받아써 원래 문장과 비교하고, 덜 닮았으면 다시 만든다 — 가장 닮은 것을 쓴다.
+        Chatterbox 는 가끔 문장 앞뒤에 알아들을 수 없는 말을 덧붙이고(무작위), 가끔 아주 느리게 읽는다
+        (실측: 중국어 7글자에 3.8초). 만든 소리를 Whisper 로 다시 받아써 원래 문장과 비교하고, 길이가
+        예상(expected초)보다 한참 길면 다시 만든다 — 내용이 맞는 것 중 가장 짧은 것을 쓴다.
         @returns (wav, 닮은 정도 0~1, 시도 횟수)
         """
-        best = (None, -1.0)
+        from .mix import trim
+        limit = expected * SLOW_FACTOR + 0.5 if expected else None
+        good, any_ = [], []
         tries = 0
         for tries in range(1, MAX_TRIES + 1):
             wav = self.say(text, lang)
             got = heard(wav, self.sr, lang)
             score = similarity(text, got)
-            if score > best[1]:
-                best = (wav, score)
+            dur = len(trim(wav, self.sr)) / self.sr
+            any_.append((wav, score, dur))
             if not needs_retry(text, got, score):
-                best = (wav, score)
-                break
-        return best[0], round(best[1], 3), tries
+                good.append((wav, score, dur))
+                if limit is None or dur <= limit:
+                    break
+        if good:
+            wav, score, _ = min(good, key=lambda c: c[2])  # 내용이 맞는 것 중 가장 짧은 것
+        else:
+            wav, score, _ = max(any_, key=lambda c: c[1])  # 다 어긋나면 가장 닮은 것
+        return wav, round(score, 3), tries
 
 
+SLOW_FACTOR = 1.6  # 예상보다 이만큼 + 0.5초 넘게 길면 너무 느리게 읽은 것
 MAX_TRIES = 3
 GOOD_ENOUGH = 0.8
 
